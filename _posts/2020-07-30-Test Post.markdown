@@ -1,0 +1,10 @@
+---
+Title:  "Intro Post"
+#excerpt: "The resolution to this problem for me was to ensure that an SPNameQualifier value was sent as a claim property from AD FS to IdentityNow."
+date:   "2020-07-30"
+categories: 
+- "test"
+#tags: 
+- "ADFS"
+---
+This is a Test Post to see how blog works. 
