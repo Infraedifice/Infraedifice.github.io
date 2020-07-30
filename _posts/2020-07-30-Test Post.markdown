@@ -15,6 +15,10 @@ $DFS = Get-Dfsnroot
 $a = @()
 $i = 1
 $count = $dfs.count
+```
+The above is a test to see how to split the code
+
+```powershell
 Foreach ($obj in $dfs)
 {
   Write-Progress -Activity "Getting DFS info of $($obj.path)" -Status "$i of $count" -PercentComplete ($i/$count*100)
