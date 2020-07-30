@@ -4,8 +4,7 @@ Title:  "Intro Post"
 date:   "2020-07-30"
 categories: 
 - "test"
-#tags: 
-- "ADFS"
+#tags: "ADFS"
 ---
 This is a Test Post to see how blog works. 
 
