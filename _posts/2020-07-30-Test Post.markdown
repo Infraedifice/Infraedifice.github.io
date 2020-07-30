@@ -9,4 +9,47 @@ categories:
 ---
 This is a Test Post to see how blog works. 
 
-Update from Jesse
+```PowerShell
+#This Script gives information about the DFS Namespaces, Foldertargets and it will check if the folder path is valid or not. 
+$DFS = Get-Dfsnroot
+#The above command gives information about DFS root. 
+$a = @()
+$i = 1
+$count = $dfs.count
+Foreach ($obj in $dfs)
+{
+  Write-Progress -Activity "Getting DFS info of $($obj.path)" -Status "$i of $count" -PercentComplete ($i/$count*100)
+    $folder = Get-dfsnfolder -path "$($obj.path)\*" | Select path, State -ErrorAction Stop
+    #The above command gives folder information for the root paths. 
+    Foreach ($name in $folder)
+    {
+        $target = Get-dfsnfoldertarget -path $($name.path) | Select TargetPath -ErrorAction Stop
+        #The above command gives folder target path for each of the folder in the DFS folder. 
+        Foreach ($tar in $target)
+        {
+            $record = New-Object psobject 
+            $record | Add-Member -Type NoteProperty -Name "Root" -Value $obj.path
+            $record | Add-Member -Type NoteProperty -Name "Namespace" -Value $name.path
+            $record | Add-Member -Type NoteProperty -Name "TargetFolder" -Value $target.Targetpath
+            $record | Add-Member -Type NoteProperty -Name "State" -Value $name.state
+            Try
+                {
+                    $testing = Test-Path -Path $($tar.Targetpath) -ErrorAction Stop
+                    #The above Command tests if the folder target path is valid or not. 
+                    $record | Add-Member -Type NoteProperty -Name "ValidPath" -Value $testing
+                }
+            catch
+                {
+                    $temp = $error[0].exception.message
+                    $record | Add-Member -Type NoteProperty -Name "ValidPath" -Value $temp
+                } #End of try and Catch Statements
+            $a += $record
+        } #End of foreach loop for DFS Folder Target path 
+    } #End of foreach loop for DFS Folder path. 
+    $i++
+} #End of Script. 
+$filepath = "DFSScanresults" + (Get-date -Format "dd-MM-yyyy") + ".csv"
+#Creating path for exporting the results. 
+$a | Export-Csv -Path $filepath -NoTypeInformation
+```
+This is a Test code
