@@ -9,7 +9,7 @@ categories:
 ---
 This is a Test Post to see how blog works. 
 
-```Powershell
+```powershell
 #This Script gives information about the DFS Namespaces, Foldertargets and it will check if the folder path is valid or not. 
 $DFS = Get-Dfsnroot
 #The above command gives information about DFS root. 
