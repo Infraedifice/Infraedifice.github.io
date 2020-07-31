@@ -116,7 +116,7 @@ author:
   links:
     - label: "Home"
       icon: "fas fa-fw fa-link"
-      url: "https://jloudon.com"
+      url: #"https://jloudon.com"
     - label: "LinkedIn"
       icon: "fab fa-fw fa-linkedin"
       url: https://www.linkedin.com/in/chiru-adapa-677734161/
