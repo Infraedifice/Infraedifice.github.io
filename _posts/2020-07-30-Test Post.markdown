@@ -1,12 +1,20 @@
 ---
-Title:  "Intro Post"
+Title:  "DNS"
 #excerpt: "The resolution to this problem for me was to ensure that an SPNameQualifier value was sent as a claim property from AD FS to IdentityNow."
-date:   "2020-07-30"
+date:   "2020-08-01"
 categories: 
-- "test"
-#tags: "ADFS"
+- "DNS Records"
+tags: "DNS"
 ---
-This is a Test Post to see how blog works. 
+This blog is all about DNS. I'm sure most of the IT people will know what DNS is, especially if you're an Infrastructure guy i'm sure you know what i'm talking. 
+I've been to a client who had massive DNS records & I've been tasked to remediate the DNS records, being a maasive organization my client had n-number of DNS records. 
+My initial thought's were like how do i do that. So, i've formulated the following 3-step process. 
+
+a.) Item **Discover**.
+b.) Item **Test**.
+c.) Item **Remediate**.
+
+a.) **Discover**
 
 ```powershell
 #This Script gives information about the DFS Namespaces, Foldertargets and it will check if the folder path is valid or not. 
