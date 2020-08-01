@@ -6,13 +6,13 @@ categories:
 - "DNS Records"
 tags: "DNS"
 ---
-This blog is all about DNS. I'm sure most of the IT people will know what DNS is, especially if you're an Infrastructure guy i'm sure you know what i'm talking. 
+This blog is all about DNS. I'm sure most of the IT people will know what DNS is. Especially if you're an Infrastructure guy i'm sure you know what i'm talking. 
 I've been to a client who had massive DNS records & I've been tasked to remediate the DNS records, being a maasive organization my client had n-number of DNS records. 
 My initial thought's were like how do i do that. So, i've formulated the following 3-step process. 
 
-a.) **Discover**.
-b.) **Test**.
-c.) **Remediate**.
+1. **Discover**.
+2. **Test**.
+3. **Remediate**.
 
 a.) **Discover**
 
