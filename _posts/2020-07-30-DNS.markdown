@@ -14,7 +14,7 @@ My initial thought's were like how do i do that. So, i've formulated the followi
 2. **Test**.
 3. **Remediate**.
 
-a.) **Discover**
+1._**Discover**_
 
 ```powershell
 #This Script gives information about the DFS Namespaces, Foldertargets and it will check if the folder path is valid or not. 
