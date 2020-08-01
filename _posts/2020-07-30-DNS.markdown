@@ -1,6 +1,6 @@
 ---
-Title:  "DNS"
-#excerpt: "The resolution to this problem for me was to ensure that an SPNameQualifier value was sent as a claim property from AD FS to IdentityNow."
+title: "DNS"
+excerpt: "This DNS script makes "
 date:   "2020-08-01"
 categories: 
 - "DNS Records"
@@ -8,59 +8,31 @@ tags: "DNS"
 ---
 This blog is all about DNS. I'm sure most of the IT people will know what DNS is. Especially if you're an Infrastructure guy i'm sure you know what i'm talking. 
 I've been to a client who had massive DNS records & I've been tasked to remediate the DNS records, being a maasive organization my client had n-number of DNS records. 
-My initial thought's were like how do i do that. So, i've formulated the following 3-step process. 
+My initial thought's were like how do i find stale records & how do i convience customer what i found are stale records. In this process i thought the following will be helpful in convincing customer.
 
 1. **Discover**.
 2. **Test**.
 3. **Remediate**.
 
-1._**Discover**_
+## 1.***Discover***
+Initial step is to discover the DNS records that are in the organization. In order to do that i harnessed the power of Power Shell. In this extraction we are mainly focused on "Name Server" records in DNS zones in the organization because by testing NS records we are able to say if the record is valid or invalid. Usually there will be DNS servers in every organization. So i will be running the script on each server to get the DNS zones and NS records associated to the zones. 
 
 ```powershell
-#This Script gives information about the DFS Namespaces, Foldertargets and it will check if the folder path is valid or not. 
-$DFS = Get-Dfsnroot
-#The above command gives information about DFS root. 
-$a = @()
+$DNS = Get-DnsServerZone -computerName "Server Name"
+$Array = @()
+$Count = $DNS.count
 $i = 1
-$count = $dfs.count
 ```
-The above is a test to see how to split the code
-
+So the above command will query the DNS zones in DNS Server and I created a empty array to store all the records which will be extracted into a csv file. 
 ```powershell
-Foreach ($obj in $dfs)
+Foreach ($obj in $DNS)
 {
-  Write-Progress -Activity "Getting DFS info of $($obj.path)" -Status "$i of $count" -PercentComplete ($i/$count*100)
-    $folder = Get-dfsnfolder -path "$($obj.path)\*" | Select path, State -ErrorAction Stop
-    #The above command gives folder information for the root paths. 
-    Foreach ($name in $folder)
-    {
-        $target = Get-dfsnfoldertarget -path $($name.path) | Select TargetPath -ErrorAction Stop
-        #The above command gives folder target path for each of the folder in the DFS folder. 
-        Foreach ($tar in $target)
-        {
-            $record = New-Object psobject 
-            $record | Add-Member -Type NoteProperty -Name "Root" -Value $obj.path
-            $record | Add-Member -Type NoteProperty -Name "Namespace" -Value $name.path
-            $record | Add-Member -Type NoteProperty -Name "TargetFolder" -Value $target.Targetpath
-            $record | Add-Member -Type NoteProperty -Name "State" -Value $name.state
-            Try
-                {
-                    $testing = Test-Path -Path $($tar.Targetpath) -ErrorAction Stop
-                    #The above Command tests if the folder target path is valid or not. 
-                    $record | Add-Member -Type NoteProperty -Name "ValidPath" -Value $testing
-                }
-            catch
-                {
-                    $temp = $error[0].exception.message
-                    $record | Add-Member -Type NoteProperty -Name "ValidPath" -Value $temp
-                } #End of try and Catch Statements
-            $a += $record
-        } #End of foreach loop for DFS Folder Target path 
-    } #End of foreach loop for DFS Folder path. 
-    $i++
-} #End of Script. 
-$filepath = "DFSScanresults" + (Get-date -Format "dd-MM-yyyy") + ".csv"
-#Creating path for exporting the results. 
-$a | Export-Csv -Path $filepath -NoTypeInformation
+    Write-Progress -Activity "Getting info for $obj.Zonename" -Status "$i of $count" -PercentComplete ($i/$count*100)
+    $ResourceRecords = Get-DnsServerResourceRecord -ComputerName "Server Name" -ZoneName $($obj.Zonename) -RRType NS
 ```
-This is a Test code
+Above will give us all the DNS zones in the DNS server and it will store the value in a variable. 
+
+## 2.***Test***
+Now in this phase i decided to test the name server records that i extracted and stored in the variable "ResourceRecords"
+This is vital part in the script. In this part Power Shell cmdlet will try to resolve each of the Name Server record that i extracted in the above. 
+
