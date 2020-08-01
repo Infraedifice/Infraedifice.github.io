@@ -75,4 +75,3 @@ We achieved the most difficult part of the task which is extracting the records 
 Remove-dnsserverresourcerecord -Name "Hostname of the record" -RRtype "NS" -recorddata "name of name server record" -zonename "zone name" -computername "Server name"
 ```
 ## **Note**:- Above script is compatible with Windows Server from 2012. This won't work on windows server 2008. 
-
