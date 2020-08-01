@@ -1,6 +1,6 @@
 ---
 title: "DNS"
-excerpt: "This DNS script makes "
+excerpt: "This DNS taks helps me understand how vital NS records are"
 date:   "2020-08-01"
 categories: 
 - "DNS Records"
