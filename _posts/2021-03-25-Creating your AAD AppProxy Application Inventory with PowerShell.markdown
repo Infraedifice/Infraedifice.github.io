@@ -1,6 +1,9 @@
 ---
 title: "Creating your AAD AppProxy Application Inventory with PowerShell"
 excerpt: "Extract list of Azure AD App Proxy applications with PowerShell"
+header: 
+    og_image: /assets/images/AppproxyApplicationinventory-blog-imagr.png
+    teaser: /assets/images/AppproxyApplicationinventory-blog-imagr.png
 date:   "2021-03-15"
 categories: 
 - "Automation"
