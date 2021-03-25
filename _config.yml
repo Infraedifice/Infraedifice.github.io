@@ -116,13 +116,13 @@ author:
   links:
     - label: "Home"
       icon: "fas fa-fw fa-link"
-      url: #"https://jloudon.com"
+      url: "https://infraedifice.com"
     - label: "LinkedIn"
       icon: "fab fa-fw fa-linkedin"
       url: https://www.linkedin.com/in/chiru-adapa-677734161/
     - label: "Website"
       icon: "fas fa-fw fa-link"
-      url: "https://infraedifice.github.io"
+      url: #"https://infraedifice.github.io"
     - label: #"Twitter"
       icon: #"fab fa-fw fa-twitter-square"
       url: #"https://twitter.com/jesseloudon"
@@ -133,15 +133,15 @@ author:
 # Site Footer
 footer:
   links:
-    - #label: "LinkedIn"
-      #icon: "fab fa-fw fa-linkedin"
-      #url: https://www.linkedin.com/in/
+    - label: #"LinkedIn"
+      icon: "fab fa-fw fa-linkedin"
+      url: https://www.linkedin.com/in/chiru-adapa-677734161/
     - #label: "Twitter"
       #icon: "fab fa-fw fa-twitter-square"
       #url: "https://twitter.com/"
-    - #label: "GitHub"
-      #icon: "fab fa-fw fa-github"
-      #url: "https://github.com/"
+    - label: #"GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/infraedifice"
 
 
 # Reading Files
