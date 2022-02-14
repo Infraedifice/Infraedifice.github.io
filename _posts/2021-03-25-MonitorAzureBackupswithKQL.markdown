@@ -16,7 +16,7 @@ tags:
 Back in the day no one worried about monitoring & reporting, now as companies focus their shift to security, there's a growing interest in
 monitoring & reporting.
 
-In this blog post I'll walk you through how I configured Azure an monitoring & dashboard solution for a client scoped to their existing Azure VM's.
+In this blog post I'll walk you through how I configured Azure monitoring & dashboard solution for a client scoped to their existing Azure VM's.
 
 In order to configure Azure monitoring, you need to perform the following:
  1. **Analyze the Logs**
