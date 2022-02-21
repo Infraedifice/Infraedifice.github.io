@@ -4,7 +4,7 @@ excerpt: "Automate M365 reports using Azure runbook & Graph API"
 header: 
    og_image: /assets/images/Email orchestration/teaser-logo.png
    teaser: /assets/images/Email orchestration/teaser-logo.png
-date:   "2021-02-21"
+date:   "2021-02-22"
 categories: 
 - "Automation"
 tags: 
