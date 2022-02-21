@@ -126,9 +126,9 @@ author:
     - label: #"Twitter"
       icon: #"fab fa-fw fa-twitter-square"
       url: #"https://twitter.com/jesseloudon"
-    - label: "GitHub"
-      icon: "fab fa-fw fa-github"
-      url: "https://github.com/infraedifice"
+    - label: #"GitHub"
+      icon: #"fab fa-fw fa-github"
+      url: #"https://github.com/infraedifice"
 
 # Site Footer
 footer:
