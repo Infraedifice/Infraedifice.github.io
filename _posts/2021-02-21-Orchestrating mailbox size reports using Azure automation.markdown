@@ -293,7 +293,7 @@ Invoke-RestMethod -Method POST -Uri $sendURL -Headers $headers -Body $mailbody
 
 else
 {
-    Write-Verbose -Verbose "None of the mailbox size is greater than 90GB"
+    Write-Verbose -Verbose "Enter your custom error message"
 }
 
 ```
