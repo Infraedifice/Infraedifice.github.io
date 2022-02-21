@@ -186,15 +186,15 @@ $base64string = [convert]::ToBase64String((Get-Content -path $path -Encoding byt
 
 #### key vault Name ###
 
-$keyvault = "AutomationEmail-key"
+$keyvault = "Enter your Keyvault name"
 
 ### Secret Name in the key Vault ###
 
-$keyvaultSecretName = "AutomationEmailSecret"
+$keyvaultSecretName = "Enter your secret name from the Keyvault"
 
 ### Application ID of the Azure AD App registration ###
 
-$Application_ID = "xxxx-xxxx-xxxxx-xxxxx"
+$Application_ID = "xxxx-xxxx-xxxxx-12345"
 
 ### Tenant ID of the Azure AD App registration ###
 
@@ -264,7 +264,7 @@ $mailbody = @"
                           "subject": "MailboxSize Report - $CurrentDate",
                           "body": {
                             "contentType": "HTML",
-                            "content": "This email contains mailbox size report of the mailboxes that are greater than 90 GB"
+                            "content": "Email content."
                           },
                           
                           "toRecipients": [
@@ -300,5 +300,6 @@ else
 
 You can schedule the runbook as per your requirement. 
 
+I hope you enjoy the blog! 
 
 Chiru
