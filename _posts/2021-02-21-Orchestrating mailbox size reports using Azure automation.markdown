@@ -293,7 +293,7 @@ Invoke-RestMethod -Method POST -Uri $sendURL -Headers $headers -Body $mailbody
 
 else
 {
-    Write-Verbose -Verbose "Enter your custom error message"
+    Write-Verbose -Verbose "Customized error message"
 }
 
 ```
