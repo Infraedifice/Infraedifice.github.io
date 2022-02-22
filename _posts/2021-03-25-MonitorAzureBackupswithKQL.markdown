@@ -13,18 +13,19 @@ tags:
 - "Azure Backups"
 - "Azure Monitoring"
 ---
-Back in the day no one worried about monitoring & reporting, now as companies focus their shift to security, there's a growing interest in
+Back in the day no one worried about monitoring & reporting, now as companies focus on security, there's a growing interest in
 monitoring & reporting.
 
-In this blog post I'll walk you through how I configured Azure monitoring & dashboard solution for a client scoped to their existing Azure VM's.
+This blog post will walk you through how I configured Azure monitoring & dashboard solution for clients on their existing Azure VM's.
 
 In order to configure Azure monitoring, you need to perform the following:
+
  1. **Analyze the Logs**
  2. **Visualize the logs into user friendly view**
 
 ## 1.**Analyze the Logs**
 
-My initial task was to investigate where the logs are stored. Usually we quickly browse to event manager for servers & computers but in Azure we need to enable the below diagnostics on the virtual machine to feed data to "Log Analytics Workspace". 
+My initial task was to investigate where the logs are stored. Usually we quickly browse to event manager for servers & computers but in Azure we need to enable the following diagnostics on the virtual machine to feed data to "Log Analytics Workspace". 
 
 * **AddonAzureBackupJobs**
 * **CoreAzureBackup**
