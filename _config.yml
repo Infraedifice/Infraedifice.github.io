@@ -125,7 +125,7 @@ author:
       url: #"https://infraedifice.github.io"
     - label: #"Twitter"
       icon: #"fab fa-fw fa-twitter-square"
-      url: #"https://twitter.com/jesseloudon"
+      url: #""
     - label: #"GitHub"
       icon: #"fab fa-fw fa-github"
       url: #"https://github.com/infraedifice"
