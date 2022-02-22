@@ -133,7 +133,7 @@ author:
 # Site Footer
 footer:
   links:
-    - label: #"LinkedIn"
+    - label: "LinkedIn"
       icon: "fab fa-fw fa-linkedin"
       url: https://www.linkedin.com/in/chiru-adapa-677734161/
     - #label: "Twitter"
