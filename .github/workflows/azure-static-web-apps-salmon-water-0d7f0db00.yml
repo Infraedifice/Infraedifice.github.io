@@ -22,21 +22,22 @@ jobs:
         with:
           submodules: true
           lfs: false
-      - name: Set up Ruby
+- name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.1' # Ensure this matches your local Gemfile.lock's Ruby version (e.g., '2.7', '3.0', '3.1', '3.2')
+          ruby-version: '3.1' # VERIFY THIS IS YOUR LOCAL RUBY VERSION (e.g., '2.6', '2.7', '3.0', '3.1', '3.2')
+          bundler-cache: true # Re-enabling this with the next steps might work better
+          # This will install bundler into the user's home directory by default
+          # and use it for subsequent bundle commands.
 
-- name: Install Jekyll dependencies
-        # No bundler-cache here to ensure a fresh, complete install if issues
+      - name: Install dependencies and build Jekyll
         run: |
-          gem install bundler
-          bundle install # Simpler bundle install
+          # Ensure Bundler is up-to-date and gems are installed based on Gemfile.lock
+          bundle config set deployment 'true'
+          bundle config set path 'vendor/bundle'
+          bundle install --jobs 4 --retry 3 # Install gems into vendor/bundle
 
-      - name: Build Jekyll site
-        # Explicitly set BUNDLE_PATH to ensure Jekyll finds gems
-        run: |
-          export BUNDLE_PATH=$HOME/.gem/ruby/3.1.0 # Adjust Ruby version (e.g., 2.7.0, 3.0.0, 3.2.0) based on your chosen ruby-version
+          # Build the Jekyll site using the installed gems
           bundle exec jekyll build
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
