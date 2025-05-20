@@ -42,14 +42,14 @@ jobs:
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_SALMON_WATER_0D7F0DB00 }}
           action: "upload"
-          # app_location: This tells Azure where to find your *pre-built static content* within the repository.
-          # We are now setting it to "/_site" because you are committing the '_site' folder itself,
-          # and your actual website files (like index.html) are *inside* that folder.
-          app_location: "/_site" # <--- THIS IS THE CRUCIAL CHANGE
+          # app_location: This is the root of your *source code* within the repository.
+          # For this setup, the repository root (where your _site folder is located) is the app root.
+          app_location: "/"
           api_location: "" # Leave empty for Jekyll (no API backend)
-          # output_location: This is relative to app_location. Since your index.html is directly
-          # inside the _site folder, the output root is "/" relative to app_location.
-          output_location: "/"
+          # output_location: This tells Azure *which folder* (relative to app_location)
+          # contains the final, built website files that should be deployed.
+          # Since your _site folder is at the repo root and contains your blog, this is "_site".
+          output_location: "_site"
           # CRITICAL: This tells Azure Static Web Apps to SKIP its internal build process.
           # It assumes your content is already built and ready for deployment.
           skip_app_build: true
