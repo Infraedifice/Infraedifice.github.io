@@ -1,0 +1,660 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.18.1 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>GPO report on Active Directory OU with PowerShell | InfraEdifice</title>
+<meta name="description" content="Extract GPO report on AD OU’s with PowerShell ">
+
+
+  <meta name="author" content="Chiru Adapa">
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_AU">
+<meta property="og:site_name" content="InfraEdifice">
+<meta property="og:title" content="GPO report on Active Directory OU with PowerShell">
+<meta property="og:url" content="https://infraedifice.github.io/automation/GPO-via-PowerShell/">
+
+
+  <meta property="og:description" content="Extract GPO report on AD OU’s with PowerShell ">
+
+
+
+  <meta property="og:image" content="https://infraedifice.github.io/assets/images/GPOreporton%20ADOUwithPowerShell.png">
+
+
+
+  <meta name="twitter:site" content="@">
+  <meta name="twitter:title" content="GPO report on Active Directory OU with PowerShell">
+  <meta name="twitter:description" content="Extract GPO report on AD OU’s with PowerShell ">
+  <meta name="twitter:url" content="https://infraedifice.github.io/automation/GPO-via-PowerShell/">
+
+  
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://infraedifice.github.io/assets/images/GPOreporton%20ADOUwithPowerShell.png">
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2021-04-01T00:00:00+10:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://infraedifice.github.io/automation/GPO-via-PowerShell/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Chiru Adapa",
+      "url": "https://infraedifice.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="InfraEdifice Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png">
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single wide">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/Blog_Profile.png" alt=""></a>
+        
+        <a class="site-title" href="/">
+          InfraEdifice
+          <span class="site-subtitle">It always seems impossible until it's done</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li><li class="masthead__menu-item">
+              <a href="https://github.com/Infraedifice/infraedifice.github.io">GitHub</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+  
+    
+      
+      
+      
+      
+    
+    
+      
+
+<nav class="nav__list">
+  
+  <input id="ac-toc" name="accordion-toc" type="checkbox" />
+  <label for="ac-toc">Toggle menu</label>
+  <ul class="nav__items">
+    
+  </ul>
+</nav>
+
+    
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="GPO report on Active Directory OU with PowerShell">
+    <meta itemprop="description" content="Extract GPO report on AD OU’s with PowerShell">
+    <meta itemprop="datePublished" content="2021-04-01T00:00:00+10:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">GPO report on Active Directory OU with PowerShell
+</h1>
+          
+            <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  6 minute read
+
+</p>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu">
+  <li><a href="#1-module-check">1. Module Check</a></li>
+  <li><a href="#2-main-script">2. Main Script</a></li>
+  <li><a href="#3-output">3. Output</a></li>
+</ul>
+
+            </nav>
+          </aside>
+        
+        <p>Hello readers, in this blog I’m going to explain how to identify which GPO (Group Policy Object) is applied on an AD OU.</p>
+
+<p>In my experience with large organizations where Active Directory contains hundreds of OU (Organization Units) &amp; whenever an IT admin wants to access the GPO report, they need to access the group policy management console to check which  GPO is applied on what OU.</p>
+
+<p>One of my clients approached me to get the report of existing GPO’s so that they can analyze the stale GPO &amp; remediate them. You can get that by using Get-Gporeport from Microsoft docs but the report is in either HTML or XML &amp; the client wants to know which GPO is applied on what OU.
+My client wants to read it in a quick user-friendly way (excel report), so I decided to export the GPO report using PowerShell. The way I did it is by querying each OU in Active Directory &amp; check which GPO is applied on it. 
+So, all you need is an Active Directory administrator access &amp; AD module installed in PowerShell. This script provides the following.</p>
+
+<ol>
+  <li><strong>Display Name of GPO</strong></li>
+  <li><strong>GPO enabled on OU</strong></li>
+  <li><strong>GPO enforced on OU</strong></li>
+</ol>
+
+<p>By using the above 3 you should be able to report if a GPO is applied on an AD OU or not. Let’s dive into the PowerShell script.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># This script uses a function to check the AD module installation and loads it if it's not loaded already. </span><span class="w">
+</span><span class="kr">Function</span><span class="w"> </span><span class="nf">Check-ADModule</span><span class="w">
+</span><span class="p">{</span><span class="w">
+  </span><span class="kr">Try</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nv">$check</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-Addomain</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+  </span><span class="kr">catch</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+  </span><span class="nv">$fault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$error</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="nf">exception</span><span class="o">.</span><span class="nf">message</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+ </span><span class="kr">if</span><span class="w"> </span><span class="p">(</span><span class="nv">$check</span><span class="p">)</span><span class="w">
+ </span><span class="p">{</span><span class="w">
+  </span><span class="n">Write-Host</span><span class="w"> </span><span class="nt">-ForegroundColor</span><span class="w"> </span><span class="nx">Cyan</span><span class="w"> </span><span class="s2">"Active Directory module loaded"</span><span class="w">
+ </span><span class="p">}</span><span class="w">
+ </span><span class="kr">else</span><span class="w">
+ </span><span class="p">{</span><span class="w">
+  </span><span class="n">Write-Host</span><span class="w"> </span><span class="nt">-ForegroundColor</span><span class="w"> </span><span class="nx">red</span><span class="w"> </span><span class="s2">"We need to Import Active Directory Module"</span><span class="w">
+  </span><span class="n">Import-Module</span><span class="w"> </span><span class="nx">ActiveDirectory</span><span class="w">
+  </span><span class="c"># The above command imports AD module.</span><span class="w">
+ </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="c"># This Script Gives information about all the GPO's associated with each OU in the domain. </span><span class="w">
+</span><span class="c"># In this script we get the OU information first and then we will get the GPO links for each of them.</span><span class="w">
+</span><span class="n">Check-ADModule</span><span class="w">
+</span><span class="c"># The above Function checks for AD Module Installation.  </span><span class="w">
+</span><span class="nv">$OU</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-adorganizationalunit</span><span class="w"> </span><span class="nt">-filter</span><span class="w"> </span><span class="s1">'Name -like "*"'</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select</span><span class="w"> </span><span class="nx">Name</span><span class="p">,</span><span class="w"> </span><span class="nx">DistinguishedName</span><span class="w">
+</span><span class="nv">$i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span><span class="nv">$count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$ou</span><span class="o">.</span><span class="nf">count</span><span class="w">
+</span><span class="nv">$a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@()</span><span class="w">
+</span><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$obj</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$OU</span><span class="p">)</span><span class="w">
+</span><span class="p">{</span><span class="w">
+</span><span class="n">Write-Progress</span><span class="w"> </span><span class="nt">-Activity</span><span class="w"> </span><span class="s2">"Getting GPO information on all the </span><span class="si">$(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">Name</span><span class="si">)</span><span class="s2">"</span><span class="w"> </span><span class="nt">-Status</span><span class="w"> </span><span class="s2">"</span><span class="nv">$i</span><span class="s2"> of </span><span class="nv">$count</span><span class="s2">"</span><span class="w"> </span><span class="nt">-PercentComplete</span><span class="w"> </span><span class="p">(</span><span class="nv">$i</span><span class="n">/</span><span class="nv">$count</span><span class="o">*</span><span class="nx">100</span><span class="p">)</span><span class="w">
+    </span><span class="nv">$gpo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Get-ADOrganizationalUnit</span><span class="w"> </span><span class="nt">-Identity</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">DistinguishedName</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Get-GPInheritance</span><span class="p">)</span><span class="o">.</span><span class="nf">Gpolinks</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select</span><span class="w"> </span><span class="nx">GPOID</span><span class="p">,</span><span class="w"> </span><span class="nx">DisplayName</span><span class="p">,</span><span class="w"> </span><span class="nx">Enabled</span><span class="p">,</span><span class="w"> </span><span class="nx">Enforced</span><span class="p">,</span><span class="w"> </span><span class="nx">Target</span><span class="p">,</span><span class="w"> </span><span class="nx">Order</span><span class="w">
+      </span><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$GP</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$gpo</span><span class="p">)</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">New-Object</span><span class="w"> </span><span class="nx">psobject</span><span class="w"> 
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"OU Name"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">Name</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"DistinguishedName"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">DistinguishedName</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"GPODisplayName"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">DisplayName</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"GPOID"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">GpoId</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Target"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Target</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Enabled"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Enabled</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Enforced"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Enforced</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Order"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Order</span><span class="w">
+            </span><span class="nv">$a</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nv">$result</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+        </span><span class="c"># End of Foreach loop for GPO. </span><span class="w">
+    </span><span class="nv">$i</span><span class="o">++</span><span class="w">
+</span><span class="p">}</span><span class="w"> </span><span class="c"># End of script.</span><span class="w">
+</span><span class="nv">$filepath</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"GPOresults"</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">Get-date</span><span class="w"> </span><span class="nt">-Format</span><span class="w"> </span><span class="s2">"dd-MM-yyyy HH:mm:ss"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">".Csv"</span><span class="w">
+</span><span class="c"># The above command creates a filepath and name to store the GP Results. </span><span class="w">
+</span><span class="nv">$a</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Export-Csv</span><span class="w"> </span><span class="nt">-Path</span><span class="w"> </span><span class="nv">$filepath</span><span class="w"> </span><span class="nt">-NoTypeInformation</span><span class="w">
+</span></code></pre></div></div>
+<p>Above is a simple script that will query the AD organization units for GPO (Group Policy Objects) linked on the OU’s or enforced on them. The script comprises 3 parts.</p>
+
+<ol>
+  <li><strong>Module Check</strong></li>
+  <li><strong>Main Script</strong></li>
+  <li><strong>Output</strong></li>
+</ol>
+
+<p>Let’s talk about each of them.</p>
+
+<h2 id="1-module-check"><strong>1. Module Check</strong></h2>
+
+<p>Most of the people run the script without checking for pre-requisite modules. I’ve done that in the initial days of my career. So I thought it would be good to include a function that will check if the required module is installed or not. The below function achieves it by running “Get-ADdomain” cmdlet which is loaded to a variable. If the cmdlet retrieves the result then AD module is installed if not “Import-Module Active Directory” cmdlet will do it for you.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">Function</span><span class="w"> </span><span class="nf">Check-ADModule</span><span class="w">
+</span><span class="p">{</span><span class="w">
+  </span><span class="kr">Try</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nv">$check</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-Addomain</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+  </span><span class="kr">catch</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+  </span><span class="nv">$fault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$error</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="nf">exception</span><span class="o">.</span><span class="nf">message</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+ </span><span class="kr">if</span><span class="w"> </span><span class="p">(</span><span class="nv">$check</span><span class="p">)</span><span class="w">
+ </span><span class="p">{</span><span class="w">
+  </span><span class="n">Write-Host</span><span class="w"> </span><span class="nt">-ForegroundColor</span><span class="w"> </span><span class="nx">Cyan</span><span class="w"> </span><span class="s2">"Active Directory module loaded"</span><span class="w">
+ </span><span class="p">}</span><span class="w">
+ </span><span class="kr">else</span><span class="w">
+ </span><span class="p">{</span><span class="w">
+  </span><span class="n">Write-Host</span><span class="w"> </span><span class="nt">-ForegroundColor</span><span class="w"> </span><span class="nx">red</span><span class="w"> </span><span class="s2">"We need to Import Active Directory Module"</span><span class="w">
+  </span><span class="n">Import-Module</span><span class="w"> </span><span class="nx">ActiveDirectory</span><span class="w">
+  </span><span class="c"># The above command imports the AD module.</span><span class="w">
+ </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="c"># This Script Gives information about all the GPO's associated with each OU in the domain. </span><span class="w">
+</span><span class="c"># In this script we get the OU information first and then we will get the GPO links for each of them.</span><span class="w">
+</span><span class="n">Check-ADModule</span><span class="w">
+</span></code></pre></div></div>
+<h2 id="2-main-script"><strong>2. Main Script</strong></h2>
+
+<p>This is where the action takes place, in here script will query all the AD Ou’s using “Get-ADOrganizationunit” cmdlet &amp; the script will loop into each of the OU to query GPO. I specified an empty array “a” to store the output.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$OU</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-adorganizationalunit</span><span class="w"> </span><span class="nt">-filter</span><span class="w"> </span><span class="s1">'Name -like "*"'</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select</span><span class="w"> </span><span class="nx">Name</span><span class="p">,</span><span class="w"> </span><span class="nx">DistinguishedName</span><span class="w">
+</span><span class="nv">$i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span><span class="nv">$count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$ou</span><span class="o">.</span><span class="nf">count</span><span class="w">
+</span><span class="nv">$a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@()</span><span class="w">
+</span><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$obj</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$OU</span><span class="p">)</span><span class="w">
+</span><span class="p">{</span><span class="w">
+</span><span class="n">Write-Progress</span><span class="w"> </span><span class="nt">-Activity</span><span class="w"> </span><span class="s2">"Getting GPO information on all the </span><span class="si">$(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">Name</span><span class="si">)</span><span class="s2">"</span><span class="w"> </span><span class="nt">-Status</span><span class="w"> </span><span class="s2">"</span><span class="nv">$i</span><span class="s2"> of </span><span class="nv">$count</span><span class="s2">"</span><span class="w"> </span><span class="nt">-PercentComplete</span><span class="w"> </span><span class="p">(</span><span class="nv">$i</span><span class="n">/</span><span class="nv">$count</span><span class="o">*</span><span class="nx">100</span><span class="p">)</span><span class="w">
+    </span><span class="nv">$gpo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Get-ADOrganizationalUnit</span><span class="w"> </span><span class="nt">-Identity</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">DistinguishedName</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Get-GPInheritance</span><span class="p">)</span><span class="o">.</span><span class="nf">Gpolinks</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select</span><span class="w"> </span><span class="nx">GPOID</span><span class="p">,</span><span class="w"> </span><span class="nx">DisplayName</span><span class="p">,</span><span class="w"> </span><span class="nx">Enabled</span><span class="p">,</span><span class="w"> </span><span class="nx">Enforced</span><span class="p">,</span><span class="w"> </span><span class="nx">Target</span><span class="p">,</span><span class="w"> </span><span class="nx">Order</span><span class="w">
+      </span><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$GP</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$gpo</span><span class="p">)</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">New-Object</span><span class="w"> </span><span class="nx">psobject</span><span class="w"> 
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"OU Name"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">Name</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"DistinguishedName"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">DistinguishedName</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"GPODisplayName"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">DisplayName</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"GPOID"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">GpoId</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Target"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Target</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Enabled"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Enabled</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Enforced"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Enforced</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Order"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Order</span><span class="w">
+            </span><span class="nv">$a</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nv">$result</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+        </span><span class="c"># End of Foreach loop for GPO. </span><span class="w">
+    </span><span class="nv">$i</span><span class="o">++</span><span class="w">
+</span><span class="p">}</span><span class="w"> </span><span class="c"># End of script.</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="3-output"><strong>3. Output</strong></h2>
+
+<p>Once you got the result, you need to store it into a CSV file so that you can present it to the client &amp; client IT team can run this whenever they want to know the GPO’s applied on each OU or to keep it as an inventory or they can schedule this job to run weekly or monthly.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$filepath</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"GPOresults"</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">Get-date</span><span class="w"> </span><span class="nt">-Format</span><span class="w"> </span><span class="s2">"dd-MM-yyyy HH:mm:ss"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">".Csv"</span><span class="w">
+</span><span class="c"># The above command creates a filepath and name to store the GP Results. </span><span class="w">
+</span><span class="nv">$a</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Export-Csv</span><span class="w"> </span><span class="nt">-Path</span><span class="w"> </span><span class="nv">$filepath</span><span class="w"> </span><span class="nt">-NoTypeInformation</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Chiru</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#active-directory" class="page__taxonomy-item" rel="tag">Active Directory</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#group-policy-object" class="page__taxonomy-item" rel="tag">Group Policy Object</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#powershell" class="page__taxonomy-item" rel="tag">PowerShell</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categories/#automation" class="page__taxonomy-item" rel="tag">Automation</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2021-04-01T00:00:00+10:00">April 1, 2021</time></p>
+        
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?via=&text=GPO+report+on+Active+Directory+OU+with+PowerShell%20https%3A%2F%2Finfraedifice.github.io%2Fautomation%2FGPO-via-PowerShell%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter="><i class="fab fa-fw fa-twitter" aria-hidden="true"></i></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Finfraedifice.github.io%2Fautomation%2FGPO-via-PowerShell%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/automation/MonitorAzureBackupswithKQL/" class="pagination--pager" title="Monitoring your Azure Backups with KQL
+">Previous</a>
+    
+    
+      <a href="/automation/Orchestrating-mailbox-size-reports-using-Azure-automation/" class="pagination--pager" title="Orchestration of Exchange online mailbox size reports using Azure automation &amp; Microsoft Graph API
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You may also enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+      <div class="archive__item-teaser">
+        <img src="/assets/images/Email%20orchestration/teaser-logo.png" alt="">
+      </div>
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/automation/Orchestrating-mailbox-size-reports-using-Azure-automation/" rel="permalink">Orchestration of Exchange online mailbox size reports using Azure automation &amp; Microsoft Graph API
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  7 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Automate M365 reports using Azure runbook &amp; Graph API
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/automation/MonitorAzureBackupswithKQL/" rel="permalink">Monitoring your Azure Backups with KQL
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  3 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Configure Azure backup status with KQL
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/dns%20records/DNS/" rel="permalink">Auditing your DNS Records with PowerShell
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  3 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">How to extract DNS records &amp; test if they’re valid or not
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+      <div class="archive__item-teaser">
+        <img src="/assets/images/AppproxyApplicationinventory-blog-imagr.png" alt="">
+      </div>
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/automation/Creating-your-AAD-AppProxy-Application-Inventory-with-PowerShell/" rel="permalink">Creating your AAD AppProxy Application Inventory with PowerShell
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  3 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Extract list of Azure AD App Proxy applications with PowerShell
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://www.linkedin.com/in/chiru-adapa-677734161/" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i> LinkedIn</a></li>
+        
+      
+        
+      
+        
+      
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i></a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2025 Chiru Adapa. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script src="https://kit.fontawesome.com/4eee35f757.js"></script>
+
+
+
+
+
+
+
+
+
+
+  </body>
+</html>

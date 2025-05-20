@@ -1,0 +1,577 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.18.1 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Auditing your DNS Records with PowerShell | InfraEdifice</title>
+<meta name="description" content="How to extract DNS records &amp; test if they’re valid or not ">
+
+
+  <meta name="author" content="Chiru Adapa">
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_AU">
+<meta property="og:site_name" content="InfraEdifice">
+<meta property="og:title" content="Auditing your DNS Records with PowerShell">
+<meta property="og:url" content="https://infraedifice.github.io/dns%20records/DNS/">
+
+
+  <meta property="og:description" content="How to extract DNS records &amp; test if they’re valid or not ">
+
+
+
+
+
+  <meta name="twitter:site" content="@">
+  <meta name="twitter:title" content="Auditing your DNS Records with PowerShell">
+  <meta name="twitter:description" content="How to extract DNS records &amp; test if they’re valid or not ">
+  <meta name="twitter:url" content="https://infraedifice.github.io/dns%20records/DNS/">
+
+  
+    <meta name="twitter:card" content="summary">
+    
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2021-03-25T00:00:00+10:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://infraedifice.github.io/dns%20records/DNS/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Chiru Adapa",
+      "url": "https://infraedifice.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="InfraEdifice Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png">
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single wide">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/Blog_Profile.png" alt=""></a>
+        
+        <a class="site-title" href="/">
+          InfraEdifice
+          <span class="site-subtitle">It always seems impossible until it's done</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li><li class="masthead__menu-item">
+              <a href="https://github.com/Infraedifice/infraedifice.github.io">GitHub</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+  
+    
+      
+      
+      
+      
+    
+    
+      
+
+<nav class="nav__list">
+  
+  <input id="ac-toc" name="accordion-toc" type="checkbox" />
+  <label for="ac-toc">Toggle menu</label>
+  <ul class="nav__items">
+    
+  </ul>
+</nav>
+
+    
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Auditing your DNS Records with PowerShell">
+    <meta itemprop="description" content="How to extract DNS records &amp; test if they’re valid or not">
+    <meta itemprop="datePublished" content="2021-03-25T00:00:00+10:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Auditing your DNS Records with PowerShell
+</h1>
+          
+            <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  3 minute read
+
+</p>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu">
+  <li><a href="#1discover">1.Discover</a></li>
+  <li><a href="#2test">2.Test</a></li>
+  <li><a href="#3remediate">3.Remediate</a></li>
+  <li><a href="#note--above-script-is-compatible-with-windows-server-from-2012-this-wont-work-on-windows-server-2008">Note:- Above script is compatible with Windows Server from 2012. This won’t work on windows server 2008.</a></li>
+</ul>
+
+            </nav>
+          </aside>
+        
+        <p>This blog is all about DNS. I’m sure most of the IT people will know what DNS is. Especially if you’re an Infrastructure guy i’m sure you know what i’m talking. 
+I’ve been to a client who had a massive number of DNS records &amp; I’ve been tasked to remediate stale DNS records. 
+My initial thought’s were how do i find stale records &amp; how do i convience customer what i found are stale records. In this process i thought the following will be helpful in convincing customer.</p>
+
+<ol>
+  <li><strong>Discover</strong>.</li>
+  <li><strong>Test</strong>.</li>
+  <li><strong>Remediate</strong>.</li>
+</ol>
+
+<h2 id="1discover">1.<strong><em>Discover</em></strong></h2>
+<p>Initial step is to discover the DNS records that are in the organization. In order to do that i harnessed the power of Powershell. In this extraction we are mainly focused on “Name Server” records in DNS zones in the organization because by testing NS records we are able to say if the record is valid or invalid. Usually there will be DNS servers in every organization. So i will be running the script on each server to get the DNS zones and NS records associated to the zones.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$DNS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-DnsServerZone</span><span class="w"> </span><span class="nt">-computerName</span><span class="w"> </span><span class="s2">"Server Name"</span><span class="w">
+</span><span class="nv">$Array</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@()</span><span class="w">
+</span><span class="nv">$Count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$DNS</span><span class="o">.</span><span class="nf">count</span><span class="w">
+</span><span class="nv">$i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span></code></pre></div></div>
+<p>So the above command will query the DNS zones in DNS Server and I created a empty array to store all the records which will be extracted into a csv file.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$obj</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$DNS</span><span class="p">)</span><span class="w">
+</span><span class="p">{</span><span class="w">
+    </span><span class="n">Write-Progress</span><span class="w"> </span><span class="nt">-Activity</span><span class="w"> </span><span class="s2">"Getting info for </span><span class="nv">$obj</span><span class="s2">.Zonename"</span><span class="w"> </span><span class="nt">-Status</span><span class="w"> </span><span class="s2">"</span><span class="nv">$i</span><span class="s2"> of </span><span class="nv">$count</span><span class="s2">"</span><span class="w"> </span><span class="nt">-PercentComplete</span><span class="w"> </span><span class="p">(</span><span class="nv">$i</span><span class="n">/</span><span class="nv">$count</span><span class="o">*</span><span class="nx">100</span><span class="p">)</span><span class="w">
+    </span><span class="nv">$ResourceRecords</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-DnsServerResourceRecord</span><span class="w"> </span><span class="nt">-ComputerName</span><span class="w"> </span><span class="s2">"Server Name"</span><span class="w"> </span><span class="nt">-ZoneName</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">Zonename</span><span class="p">)</span><span class="w"> </span><span class="nt">-RRType</span><span class="w"> </span><span class="n">NS</span><span class="w">
+</span></code></pre></div></div>
+<p>Above will give us all the DNS zones in the DNS server and it will store the value in a variable. As we had so many zones in the DNS records, i thought it will be helpfull to visualize how many zones are there and their information. I’m able to achieve it via “Write-progress” cmdlet which i found usefull.</p>
+
+<h2 id="2test">2.<strong><em>Test</em></strong></h2>
+<p>Now in this phase i decided to test the name server records that i extracted and stored in the variable “ResourceRecords”
+This is a vital part in the script. In this part Power Shell cmdlet will try to resolve every Name Server record that it extracted in the above.
+If the cmdlet is able to resolve the name server record then it’s valid otherwise it’s an invalid record.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$zone</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$Resourcerecords</span><span class="p">)</span><span class="w">
+        </span><span class="p">{</span><span class="w"> 
+          </span><span class="kr">Try</span><span class="w"> 
+          </span><span class="p">{</span><span class="w">
+            </span><span class="nv">$ns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Resolve-DnsName</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$zone</span><span class="o">.</span><span class="nf">RecordData</span><span class="p">)</span><span class="o">.</span><span class="nf">NameServer</span><span class="w"> 
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">New-Object</span><span class="w"> </span><span class="nx">psobject</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Name"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$ns</span><span class="o">.</span><span class="nf">Name</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+         </span><span class="kr">Catch</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="nv">$error</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="nf">Exception</span><span class="o">.</span><span class="nf">Message</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Name"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$error</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="nf">exception</span><span class="o">.</span><span class="nf">Message</span><span class="p">)</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"ZoneName"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$obj</span><span class="o">.</span><span class="nf">ZoneName</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"zoneType"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$obj</span><span class="o">.</span><span class="nf">ZoneType</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"ReverseLookupZone"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$obj</span><span class="o">.</span><span class="nf">Isreverselookupzone</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Hostname"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$Zone</span><span class="o">.</span><span class="nf">Hostname</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"RecordData"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$zone</span><span class="o">.</span><span class="nf">recorddata</span><span class="p">)</span><span class="o">.</span><span class="nf">Nameserver</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"IPAddress"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$ns</span><span class="o">.</span><span class="nf">Ipaddress</span><span class="w">
+            </span><span class="nv">$array</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nv">$record</span><span class="w">
+        </span><span class="p">}</span><span class="w"> </span><span class="c">#end of $zone foreach loop</span><span class="w">
+            </span><span class="nv">$i</span><span class="o">++</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="nv">$array</span><span class="w"> 
+</span><span class="c">#End of Script</span><span class="w">
+</span></code></pre></div></div>
+<p>With the Array variable, you can save the records to a csv file. I haven’t included the “csv file” storage part in the script as the csv file storage spot will vary to the users who run the script.</p>
+
+<h2 id="3remediate">3.<strong><em>Remediate</em></strong></h2>
+
+<p>We achieved the most difficult part of the task which is extracting the records and finding a valid record. I haven’t included how to purge name server records in the script as DNS records are vital for every organization and it wouldn’t be wise purging them without proper process and approval from client. Once the records are peer reviewed by the client you can always import the reviewed csv file to a variable and can use the following powershell cmdlet to remove the records.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Remove-dnsserverresourcerecord</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Hostname of the record"</span><span class="w"> </span><span class="nt">-RRtype</span><span class="w"> </span><span class="s2">"NS"</span><span class="w"> </span><span class="nt">-recorddata</span><span class="w"> </span><span class="s2">"name of name server record"</span><span class="w"> </span><span class="nt">-zonename</span><span class="w"> </span><span class="s2">"zone name"</span><span class="w"> </span><span class="nt">-computername</span><span class="w"> </span><span class="s2">"Server name"</span><span class="w">
+</span></code></pre></div></div>
+<h2 id="note--above-script-is-compatible-with-windows-server-from-2012-this-wont-work-on-windows-server-2008"><strong>Note</strong>:- Above script is compatible with Windows Server from 2012. This won’t work on windows server 2008.</h2>
+
+<p>In this Blog I shared with you my Powershell scripts to solve stale DNS records</p>
+
+<p>Chiru</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#dns" class="page__taxonomy-item" rel="tag">DNS</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categories/#dns-records" class="page__taxonomy-item" rel="tag">DNS Records</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2021-03-25T00:00:00+10:00">March 25, 2021</time></p>
+        
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?via=&text=Auditing+your+DNS+Records+with+PowerShell%20https%3A%2F%2Finfraedifice.github.io%2Fdns%2520records%2FDNS%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter="><i class="fab fa-fw fa-twitter" aria-hidden="true"></i></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Finfraedifice.github.io%2Fdns%2520records%2FDNS%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/automation/Creating-your-AAD-AppProxy-Application-Inventory-with-PowerShell/" class="pagination--pager" title="Creating your AAD AppProxy Application Inventory with PowerShell
+">Previous</a>
+    
+    
+      <a href="/automation/MonitorAzureBackupswithKQL/" class="pagination--pager" title="Monitoring your Azure Backups with KQL
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You may also enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+      <div class="archive__item-teaser">
+        <img src="/assets/images/Email%20orchestration/teaser-logo.png" alt="">
+      </div>
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/automation/Orchestrating-mailbox-size-reports-using-Azure-automation/" rel="permalink">Orchestration of Exchange online mailbox size reports using Azure automation &amp; Microsoft Graph API
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  7 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Automate M365 reports using Azure runbook &amp; Graph API
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+      <div class="archive__item-teaser">
+        <img src="/assets/images/GPOreporton%20ADOUwithPowerShell.png" alt="">
+      </div>
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/automation/GPO-via-PowerShell/" rel="permalink">GPO report on Active Directory OU with PowerShell
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  6 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Extract GPO report on AD OU’s with PowerShell
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/automation/MonitorAzureBackupswithKQL/" rel="permalink">Monitoring your Azure Backups with KQL
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  3 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Configure Azure backup status with KQL
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+      <div class="archive__item-teaser">
+        <img src="/assets/images/AppproxyApplicationinventory-blog-imagr.png" alt="">
+      </div>
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/automation/Creating-your-AAD-AppProxy-Application-Inventory-with-PowerShell/" rel="permalink">Creating your AAD AppProxy Application Inventory with PowerShell
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  3 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Extract list of Azure AD App Proxy applications with PowerShell
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://www.linkedin.com/in/chiru-adapa-677734161/" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i> LinkedIn</a></li>
+        
+      
+        
+      
+        
+      
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i></a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2025 Chiru Adapa. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script src="https://kit.fontawesome.com/4eee35f757.js"></script>
+
+
+
+
+
+
+
+
+
+
+  </body>
+</html>

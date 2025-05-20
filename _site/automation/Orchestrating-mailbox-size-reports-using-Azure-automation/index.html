@@ -1,0 +1,809 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.18.1 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Orchestration of Exchange online mailbox size reports using Azure automation &amp; Microsoft Graph API | InfraEdifice</title>
+<meta name="description" content="Automate M365 reports using Azure runbook &amp; Graph API ">
+
+
+  <meta name="author" content="Chiru Adapa">
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_AU">
+<meta property="og:site_name" content="InfraEdifice">
+<meta property="og:title" content="Orchestration of Exchange online mailbox size reports using Azure automation &amp; Microsoft Graph API">
+<meta property="og:url" content="https://infraedifice.github.io/automation/Orchestrating-mailbox-size-reports-using-Azure-automation/">
+
+
+  <meta property="og:description" content="Automate M365 reports using Azure runbook &amp; Graph API ">
+
+
+
+  <meta property="og:image" content="https://infraedifice.github.io/assets/images/Email%20orchestration/teaser-logo.png">
+
+
+
+  <meta name="twitter:site" content="@">
+  <meta name="twitter:title" content="Orchestration of Exchange online mailbox size reports using Azure automation &amp; Microsoft Graph API">
+  <meta name="twitter:description" content="Automate M365 reports using Azure runbook &amp; Graph API ">
+  <meta name="twitter:url" content="https://infraedifice.github.io/automation/Orchestrating-mailbox-size-reports-using-Azure-automation/">
+
+  
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://infraedifice.github.io/assets/images/Email%20orchestration/teaser-logo.png">
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2022-02-22T00:00:00+10:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://infraedifice.github.io/automation/Orchestrating-mailbox-size-reports-using-Azure-automation/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Chiru Adapa",
+      "url": "https://infraedifice.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="InfraEdifice Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png">
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single wide">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/Blog_Profile.png" alt=""></a>
+        
+        <a class="site-title" href="/">
+          InfraEdifice
+          <span class="site-subtitle">It always seems impossible until it's done</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li><li class="masthead__menu-item">
+              <a href="https://github.com/Infraedifice/infraedifice.github.io">GitHub</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+  
+    
+      
+      
+      
+      
+    
+    
+      
+
+<nav class="nav__list">
+  
+  <input id="ac-toc" name="accordion-toc" type="checkbox" />
+  <label for="ac-toc">Toggle menu</label>
+  <ul class="nav__items">
+    
+  </ul>
+</nav>
+
+    
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Orchestration of Exchange online mailbox size reports using Azure automation &amp; Microsoft Graph API">
+    <meta itemprop="description" content="Automate M365 reports using Azure runbook &amp; Graph API">
+    <meta itemprop="datePublished" content="2022-02-22T00:00:00+10:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Orchestration of Exchange online mailbox size reports using Azure automation &amp; Microsoft Graph API
+</h1>
+          
+            <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  6 minute read
+
+</p>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu">
+  <li><a href="#azure-automation-account">Azure Automation Account</a></li>
+  <li><a href="#app-registration-in-azure-ad">App registration in Azure AD</a></li>
+  <li><a href="#azure-key-vault">Azure key Vault</a></li>
+  <li><a href="#import-modules--azure-automation-account-connection">Import modules &amp; Azure Automation account connection</a></li>
+  <li><a href="#mailbox-size-report-from-exchange-online">Mailbox size report from Exchange online</a></li>
+  <li><a href="#microsoft-graph-api-to-send-emails">Microsoft Graph API to send emails</a></li>
+</ul>
+
+            </nav>
+          </aside>
+        
+        <p>Reporting in M365 has come a long way. We all know that anyone with the proper access can view the M365 reports in the admin portal with a splendid graphical view. What if the operations team wants to get the notifications to a mailbox if the mailbox size reaches a specific limit (example use case)? My initial thoughts were to use SendGrid to send emails, but I thought we could use graph API and an Azure AD application to send emails rather than relying on a third-party email solution. I planned to use Azure automation to query the mailbox size from the Exchange online &amp; use Microsoft Graph API to send emails.</p>
+
+<p>Upon researching how to automate the mailbox size reports using Azure automation &amp; Microsoft Graph API, I came to the following solution.</p>
+
+<p><img src="/assets/images/Email orchestration/Solution-Overview.png" alt="Solution Overview" /></p>
+
+<p><strong>Solution Overview</strong></p>
+
+<p>The Azure run as account will extract Exchange online mailbox statistics using Azure automation in the solution. Suppose we find any mailboxes that are above a specific limit. In that case, the automation account will query the Azure key vault to retrieve credentials of an Azure AD application to send email alerts using Microsoft Graph API.</p>
+
+<p>You can learn more about Microsoft Graph API on how to send emails.</p>
+
+<p><a href="https://docs.microsoft.com/en-us/graph/outlook-mail-concept-overview?view=graph-rest-1.0">Microsoft Graph API documentation</a></p>
+
+<p>We need the following to achieve the above solution.</p>
+
+<ul>
+  <li><strong>Azure Automation Account</strong></li>
+  <li><strong>Exchange online module</strong></li>
+  <li><strong>Microsoft Graph API</strong></li>
+  <li><strong>Azure Key Vault</strong></li>
+</ul>
+
+<h2 id="azure-automation-account">Azure Automation Account</h2>
+
+<p>You need to have an Azure automation account to run Azure automation jobs. Upon automation account &amp; new runbook creation, you need to assign the Exchange administrator permission to run as account service principal. You can give the permissions via PowerShell or from GUI. 
+You need to install the Exchange online module PowerShell in the automation account. You can get that from the modules gallery, as shown below.</p>
+
+<p><img src="/assets/images/Email orchestration/Azure-Roles&amp;Responsibilities.png" alt="Assigning Exchange administrator role to service principal" />
+Exchange Administrator role in Azure AD roles &amp; responsibilites.</p>
+
+<p><img src="/assets/images/Email orchestration/ExchangeAdmnistrator-Runasaccount-Serviceprincipal.png" alt="Assigning Exchange administrator role to service principal" />
+Assigning Exchange administrator role to run as account service principal.</p>
+
+<p><img src="/assets/images/Email orchestration/Exchange Online Module - Automation account.png" alt="Install Exchange online module" />
+Exchange online powershell module</p>
+
+<p><img src="/assets/images/Email orchestration/Exchange Online-Browse Gallery - Microsoft Azure.png" alt="Install Exchange online module" />
+Exchange online powershell module in the gallery.</p>
+
+<h2 id="app-registration-in-azure-ad">App registration in Azure AD</h2>
+
+<p>Create and register a new application in Azure AD to send emails using Microsoft Graph API. Upon creating and registering the application, you need to assign Microsoft Graph API permissions to send emails on behalf of users. You need to choose application permissions in the Microsoft Graph API.</p>
+
+<p><img src="/assets/images/Email orchestration/Request API permissions - Microsoft Azure.png" alt="Microsoft Graph API Permissions" />
+Microsoft Graph API permissions.</p>
+
+<p><img src="/assets/images/Email orchestration/Microsoft Graph API permissions - Microsoft Azure.png" alt="Microsoft Graph API Permissions" />
+Assigning Microsoft Graph API application permissions.</p>
+
+<p><img src="/assets/images/Email orchestration/Microsoft Graph API -Permissions.png" alt="Microsoft Graph API Permissions" />
+Microsoft Graph API permissions on the Azure AD Application.</p>
+
+<p>Now, we need to authenticate the application from the custom code in the runbook. I will do this by configuring a client secret in the application. Make sure to copy the secret upon creation as you can’t see the client secret again.</p>
+
+<p><img src="/assets/images/Email orchestration/Azure AD Application- Client Secret.png" alt="Azure AD Application Client Secret" />
+Client secret in Azure AD Application.</p>
+
+<h2 id="azure-key-vault">Azure key Vault</h2>
+
+<p>We will leverage Azure Key Vault to securely store the client secret we created for the Azure AD Application. We manually generate a new secret in the Azure key vault. Upon holding the client secret, we will assign “Get” permissions to the “run as account” in the key vault access policies to retrieve the secret. We don’t need any other permissions as we are just retrieving the secret.</p>
+
+<p><img src="/assets/images/Email orchestration/Azure-key-Vault  - Microsoft Azure.png" alt="Azure Key Vault Secret" />
+Generate secret in Azure key Vault.</p>
+
+<p><img src="/assets/images/Email orchestration/Create a secret - Azure Key Vault - Microsoft Azure.png" alt="Azure Key Vault Secret" /></p>
+
+<p>Run the below code to send secure emails from the Azure automation runbook using Graph API.</p>
+
+<p>I categorized the code into three parts.</p>
+
+<ul>
+  <li><strong>Import modules &amp; Azure Automation account connection</strong></li>
+  <li><strong>Mailbox size report from Exchange online</strong></li>
+  <li><strong>Microsoft Graph API to send emails</strong></li>
+</ul>
+
+<h2 id="import-modules--azure-automation-account-connection">Import modules &amp; Azure Automation account connection</h2>
+
+<p>You need to import the Azure, Azure key vault and Exchange online modules and connect to the Azure automation account from the runbook as shown below.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Import-module</span><span class="w"> </span><span class="nx">AZ.Accounts</span><span class="w">
+</span><span class="n">Import-module</span><span class="w"> </span><span class="nx">Az.Keyvault</span><span class="w">
+</span><span class="n">Import-module</span><span class="w"> </span><span class="nx">Exchangeonlinemanagement</span><span class="w">
+
+</span><span class="c">### Connecting to Azure Automation Account ###</span><span class="w">
+</span><span class="kr">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+
+    </span><span class="nv">$connection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-AutomationConnection</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="nx">AzureRunAsConnection</span><span class="w">
+    </span><span class="nv">$tenantName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"test.onmicrosoft.com"</span><span class="w">
+    </span><span class="nv">$Azureaccount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Connect-AzAccount</span><span class="w"> </span><span class="se">`
+</span><span class="w">        </span><span class="nt">-ServicePrincipal</span><span class="w"> </span><span class="se">`
+</span><span class="w">        </span><span class="nt">-TenantId</span><span class="w"> </span><span class="nv">$Connection</span><span class="o">.</span><span class="nf">TenantId</span><span class="w"> </span><span class="se">`
+</span><span class="w">        </span><span class="nt">-ApplicationId</span><span class="w"> </span><span class="nv">$Connection</span><span class="o">.</span><span class="nf">ApplicationId</span><span class="w"> </span><span class="se">`
+</span><span class="w">        </span><span class="nt">-CertificateThumbprint</span><span class="w"> </span><span class="nv">$Connection</span><span class="o">.</span><span class="nf">CertificateThumbprint</span><span class="w"> 
+</span><span class="p">}</span><span class="w">
+</span><span class="kr">catch</span><span class="w">
+</span><span class="p">{</span><span class="w">
+    </span><span class="kr">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nv">$Connection</span><span class="p">)</span><span class="w">
+
+    </span><span class="p">{</span><span class="w">
+        </span><span class="c">## Run as Account not configured ##</span><span class="w">
+        </span><span class="nv">$error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Connecting to </span><span class="nv">$connection</span><span class="s2"> failed"</span><span class="w">
+        </span><span class="kr">throw</span><span class="w"> </span><span class="nv">$error</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    </span><span class="kr">else</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="c">## Something else went wrong ##</span><span class="w">
+        </span><span class="n">write-error</span><span class="w"> </span><span class="nt">-message</span><span class="w"> </span><span class="bp">$_</span><span class="o">.</span><span class="nf">Exception</span><span class="o">.</span><span class="nf">message</span><span class="w">
+        </span><span class="nx">throw</span><span class="w"> </span><span class="bp">$_</span><span class="o">.</span><span class="nf">Exception</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre></div></div>
+
+<h2 id="mailbox-size-report-from-exchange-online">Mailbox size report from Exchange online</h2>
+
+<p>Authentication to Exchange online will be done using the “run as account”.   Run the below PowerShell code to extract the mailbox size report for mailboxes greater than a specific limit.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w">
+</span><span class="c">### Connecting to Exchange online ###</span><span class="w">
+</span><span class="n">Connect-ExchangeOnline</span><span class="w"> </span><span class="nt">-CertificateThumbprint</span><span class="w"> </span><span class="nv">$connection</span><span class="o">.</span><span class="nf">CertificateThumbprint</span><span class="w"> </span><span class="nt">-AppId</span><span class="w"> </span><span class="nv">$connection</span><span class="o">.</span><span class="nf">ApplicationID</span><span class="w"> </span><span class="nt">-Organization</span><span class="w"> </span><span class="nv">$tenantName</span><span class="w"> </span><span class="nt">-Verbose</span><span class="w">
+</span><span class="c"># Date Format</span><span class="w">
+</span><span class="nv">$CurrentDate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">get-date</span><span class="p">)</span><span class="o">.</span><span class="nf">ToString</span><span class="p">(</span><span class="s1">'yyyy-MM-dd'</span><span class="p">)</span><span class="w">
+</span><span class="nv">$CurrentDate</span><span class="w">
+</span><span class="c">#Mailboxes</span><span class="w">
+</span><span class="nv">$Mailboxes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-Mailbox</span><span class="w"> </span><span class="nt">-ResultSize</span><span class="w"> </span><span class="nx">Unlimited</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nx">Name</span><span class="p">,</span><span class="w"> </span><span class="nx">Alias</span><span class="p">,</span><span class="w"> </span><span class="nx">ExchangeGuid</span><span class="w">
+</span><span class="nv">$Output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@()</span><span class="w">
+</span><span class="nv">$i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$Mailbox</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$Mailboxes</span><span class="p">)</span><span class="w">
+</span><span class="p">{</span><span class="w">
+    </span><span class="nv">$Mailboxsize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-MailboxStatistics</span><span class="w"> </span><span class="nt">-Identity</span><span class="w"> </span><span class="s2">"</span><span class="si">$(</span><span class="nv">$mailbox</span><span class="o">.</span><span class="nf">ExchangeGuid</span><span class="si">)</span><span class="s2">"</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nx">DisplayName</span><span class="p">,</span><span class="w"> </span><span class="nx">MailboxTypeDetail</span><span class="p">,</span><span class="w"> </span><span class="p">@{</span><span class="nx">name</span><span class="o">=</span><span class="err">”</span><span class="nx">TotalItemSize</span><span class="err">”</span><span class="p">;</span><span class="w"> </span><span class="nx">expression</span><span class="o">=</span><span class="p">{[</span><span class="n">math</span><span class="p">]::</span><span class="n">Round</span><span class="p">((</span><span class="bp">$_</span><span class="o">.</span><span class="nf">TotalItemSize</span><span class="o">.</span><span class="nf">ToString</span><span class="p">()</span><span class="o">.</span><span class="nf">Split</span><span class="p">(</span><span class="err">“</span><span class="p">(</span><span class="err">“</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="nf">Split</span><span class="p">(</span><span class="err">”</span><span class="w"> </span><span class="err">“</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="nf">Replace</span><span class="p">(</span><span class="err">“</span><span class="p">,</span><span class="err">”</span><span class="p">,</span><span class="err">””</span><span class="p">)</span><span class="n">/1GB</span><span class="p">),</span><span class="mi">2</span><span class="p">)}},</span><span class="w"> </span><span class="nx">IsArchiveMailbox</span><span class="w">
+
+    </span><span class="kr">if</span><span class="w"> </span><span class="p">(</span><span class="nv">$mailboxsize</span><span class="o">.</span><span class="nf">TotalItemSize</span><span class="w"> </span><span class="o">-gt</span><span class="w"> </span><span class="s2">"90"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+        
+        </span><span class="nv">$Mailboxesabovelimit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">New-Object</span><span class="w"> </span><span class="nt">-TypeName</span><span class="w"> </span><span class="nx">psobject</span><span class="w"> </span><span class="nt">-Property</span><span class="w"> </span><span class="p">@{</span><span class="w">
+
+            </span><span class="nx">DisplayName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$Mailboxsize</span><span class="err">.</span><span class="nx">DisplayName</span><span class="w">
+            </span><span class="nx">Emailaddress</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$mailbox</span><span class="err">.</span><span class="nx">PrimarySmtpAddress</span><span class="w">
+            </span><span class="nx">MailboxType</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$Mailboxsize</span><span class="err">.</span><span class="nx">MailboxTypeDetail</span><span class="w">
+            </span><span class="nx">MailboxSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$Mailboxsize</span><span class="err">.</span><span class="nx">TotalItemSize</span><span class="w">
+            </span><span class="nx">ArchiveStatus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$Mailboxsize</span><span class="err">.</span><span class="nx">IsArchiveMailbox</span><span class="w">
+            
+        </span><span class="p">}</span><span class="w">
+        </span><span class="nv">$Output</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nv">$Mailboxesabovelimit</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    </span><span class="nv">$i</span><span class="o">++</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="nv">$Output</span><span class="w">
+
+</span><span class="nv">$filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"MailboxSizes"</span><span class="o">+</span><span class="s2">"</span><span class="nv">$currentdate</span><span class="s2">"</span><span class="o">+</span><span class="s2">"."</span><span class="o">+</span><span class="s2">"csv"</span><span class="w">
+
+</span><span class="nv">$filename</span><span class="w">
+
+</span><span class="nv">$path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"</span><span class="nv">$</span><span class="nn">Env</span><span class="p">:</span><span class="nv">temp</span><span class="s2">\</span><span class="nv">$filename</span><span class="s2">"</span><span class="w">
+
+</span><span class="nv">$path</span><span class="w">
+
+</span><span class="nv">$Output</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Export-Csv</span><span class="w"> </span><span class="nt">-Path</span><span class="w"> </span><span class="nv">$path</span><span class="w"> </span><span class="nt">-NoTypeInformation</span><span class="w">
+
+</span></code></pre></div></div>
+
+<h2 id="microsoft-graph-api-to-send-emails">Microsoft Graph API to send emails</h2>
+
+<p>Run the below code to send the emails using Graph API securely. You can modify the email template as per your requirement. I used a shared mailbox to send notification emails.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w">
+</span><span class="kr">if</span><span class="w"> </span><span class="p">(</span><span class="nv">$Output</span><span class="p">)</span><span class="w">
+</span><span class="p">{</span><span class="w">
+
+</span><span class="nv">$base64string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">convert</span><span class="p">]::</span><span class="n">ToBase64String</span><span class="p">((</span><span class="n">Get-Content</span><span class="w"> </span><span class="nt">-path</span><span class="w"> </span><span class="nv">$path</span><span class="w"> </span><span class="nt">-Encoding</span><span class="w"> </span><span class="nx">byte</span><span class="p">))</span><span class="w">
+
+</span><span class="c">#### key vault Name ###</span><span class="w">
+
+</span><span class="nv">$keyvault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Enter your Keyvault name"</span><span class="w">
+
+</span><span class="c">### Secret Name in the key Vault ###</span><span class="w">
+
+</span><span class="nv">$keyvaultSecretName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Enter your secret name from the Keyvault"</span><span class="w">
+
+</span><span class="c">### Application ID of the Azure AD App registration ###</span><span class="w">
+
+</span><span class="nv">$Application_ID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"xxxx-xxxx-xxxxx-12345"</span><span class="w">
+
+</span><span class="c">### Tenant ID of the Azure AD App registration ###</span><span class="w">
+
+</span><span class="nv">$TenantID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$connection</span><span class="o">.</span><span class="nf">TenantId</span><span class="w">
+
+</span><span class="c">### From Address of the Email from Exchange online ###</span><span class="w">
+
+</span><span class="nv">$from</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"notification@test.com"</span><span class="w">
+
+</span><span class="c">### To Address of the email ###</span><span class="w">
+
+</span><span class="nv">$to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"testuser@test.com"</span><span class="w">
+
+</span><span class="c">### Getting the secret from Azure Keyvault ###</span><span class="w">
+
+</span><span class="nv">$secret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-AzKeyVaultSecret</span><span class="w"> </span><span class="nt">-VaultName</span><span class="w"> </span><span class="nv">$KeyVault</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="nv">$KeyVaultSecretName</span><span class="w">
+
+
+</span><span class="nv">$Securestringpointer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">System.Runtime.InteropServices.Marshal</span><span class="p">]::</span><span class="n">SecureStringToBSTR</span><span class="p">(</span><span class="nv">$secret</span><span class="o">.</span><span class="nf">SecretValue</span><span class="p">)</span><span class="w">
+
+
+</span><span class="kr">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+
+   </span><span class="nv">$secretValueText</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">System.Runtime.InteropServices.Marshal</span><span class="p">]::</span><span class="n">PtrToStringBSTR</span><span class="p">(</span><span class="nv">$Securestringpointer</span><span class="p">)</span><span class="w">
+
+</span><span class="p">}</span><span class="w"> 
+
+</span><span class="kr">finally</span><span class="w"> </span><span class="p">{</span><span class="w">
+  
+   </span><span class="p">[</span><span class="n">System.Runtime.InteropServices.Marshal</span><span class="p">]::</span><span class="n">ZeroFreeBSTR</span><span class="p">(</span><span class="nv">$Securestringpointer</span><span class="p">)</span><span class="w">
+
+</span><span class="p">}</span><span class="w">
+
+
+</span><span class="nv">$client_secret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$secretValueText</span><span class="w">
+
+</span><span class="nv">$request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w">
+        </span><span class="nx">Method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'POST'</span><span class="w">
+        </span><span class="nx">URI</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://login.microsoftonline.com/xxxxxxxxxx/oauth2/v2.0/token"</span><span class="w">
+        </span><span class="nx">body</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w">
+            </span><span class="nx">grant_type</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"client_credentials"</span><span class="w">
+            </span><span class="nx">scope</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://graph.microsoft.com/.default"</span><span class="w">
+            </span><span class="nx">client_id</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="nv">$Application_ID</span><span class="w">
+            </span><span class="nx">client_secret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$client_secret</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="nv">$token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Invoke-RestMethod</span><span class="w"> </span><span class="err">@</span><span class="nx">request</span><span class="p">)</span><span class="o">.</span><span class="nf">access_token</span><span class="w">
+
+</span><span class="c">#$token</span><span class="w">
+
+</span><span class="c">## Build the Microsoft Graph API request</span><span class="w">
+
+</span><span class="c">## Header ##</span><span class="w">
+
+</span><span class="nv">$headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w">
+    </span><span class="s2">"Authorization"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Bearer </span><span class="si">$(</span><span class="nv">$token</span><span class="si">)</span><span class="s2">"</span><span class="w">
+    </span><span class="s2">"Content-type"</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">"application/json"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="c">## Sending email ##</span><span class="w">
+
+</span><span class="nv">$sendURL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://graph.microsoft.com/v1.0/users/</span><span class="nv">$from</span><span class="s2">/sendMail"</span><span class="w">
+
+</span><span class="nv">$mailbody</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sh">@"
+                    {
+                        "message": {
+                          "subject": "MailboxSize Report - </span><span class="nv">$CurrentDate</span><span class="sh">",
+                          "body": {
+                            "contentType": "HTML",
+                            "content": "Email content."
+                          },
+                          
+                          "toRecipients": [
+                            {
+                              "emailAddress": {
+                                "address": "</span><span class="nv">$to</span><span class="sh">"
+                              }
+                            }
+                          ]
+                          ,"attachments": [
+                            {
+                              "@</span><span class="n">odata.type</span><span class="s2">": "</span><span class="c">#microsoft.graph.fileAttachment",</span><span class="w">
+                              </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"</span><span class="nv">$FileName</span><span class="s2">"</span><span class="p">,</span><span class="w">
+                              </span><span class="s2">"contentType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"text/csv"</span><span class="p">,</span><span class="w">
+                              </span><span class="s2">"contentBytes"</span><span class="p">:</span><span class="w"> </span><span class="s2">"</span><span class="nv">$base64string</span><span class="s2">"</span><span class="w">
+                            </span><span class="p">}</span><span class="w">
+                          </span><span class="err">]</span><span class="w">
+                        </span><span class="p">},</span><span class="w">
+                        </span><span class="s2">"saveToSentItems"</span><span class="p">:</span><span class="w"> </span><span class="s2">"false"</span><span class="w">
+                      </span><span class="p">}</span><span class="w">
+</span><span class="s2">"@
+
+Invoke-RestMethod -Method POST -Uri </span><span class="nv">$sendURL</span><span class="s2"> -Headers </span><span class="nv">$headers</span><span class="s2"> -Body </span><span class="nv">$mailbody</span><span class="s2">
+
+}
+
+else
+{
+    Write-Verbose -Verbose "</span><span class="n">Customized</span><span class="w"> </span><span class="nx">error</span><span class="w"> </span><span class="nx">message</span><span class="s2">"
+}
+
+</span></code></pre></div></div>
+
+<p>You can schedule the runbook as per your requirement.</p>
+
+<p>I hope you enjoy the blog!</p>
+
+<p>Chiru</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#azure-automation" class="page__taxonomy-item" rel="tag">Azure automation</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#azure-runbook" class="page__taxonomy-item" rel="tag">Azure Runbook</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#microsoft-graph-api" class="page__taxonomy-item" rel="tag">Microsoft Graph API</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#orchestration" class="page__taxonomy-item" rel="tag">Orchestration</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categories/#automation" class="page__taxonomy-item" rel="tag">Automation</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2022-02-22T00:00:00+10:00">February 22, 2022</time></p>
+        
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?via=&text=Orchestration+of+Exchange+online+mailbox+size+reports+using+Azure+automation+%26+Microsoft+Graph+API%20https%3A%2F%2Finfraedifice.github.io%2Fautomation%2FOrchestrating-mailbox-size-reports-using-Azure-automation%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter="><i class="fab fa-fw fa-twitter" aria-hidden="true"></i></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Finfraedifice.github.io%2Fautomation%2FOrchestrating-mailbox-size-reports-using-Azure-automation%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/automation/GPO-via-PowerShell/" class="pagination--pager" title="GPO report on Active Directory OU with PowerShell
+">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You may also enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+      <div class="archive__item-teaser">
+        <img src="/assets/images/GPOreporton%20ADOUwithPowerShell.png" alt="">
+      </div>
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/automation/GPO-via-PowerShell/" rel="permalink">GPO report on Active Directory OU with PowerShell
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  6 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Extract GPO report on AD OU’s with PowerShell
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/automation/MonitorAzureBackupswithKQL/" rel="permalink">Monitoring your Azure Backups with KQL
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  3 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Configure Azure backup status with KQL
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/dns%20records/DNS/" rel="permalink">Auditing your DNS Records with PowerShell
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  3 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">How to extract DNS records &amp; test if they’re valid or not
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+      <div class="archive__item-teaser">
+        <img src="/assets/images/AppproxyApplicationinventory-blog-imagr.png" alt="">
+      </div>
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/automation/Creating-your-AAD-AppProxy-Application-Inventory-with-PowerShell/" rel="permalink">Creating your AAD AppProxy Application Inventory with PowerShell
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  3 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Extract list of Azure AD App Proxy applications with PowerShell
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://www.linkedin.com/in/chiru-adapa-677734161/" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i> LinkedIn</a></li>
+        
+      
+        
+      
+        
+      
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i></a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2025 Chiru Adapa. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script src="https://kit.fontawesome.com/4eee35f757.js"></script>
+
+
+
+
+
+
+
+
+
+
+  </body>
+</html>

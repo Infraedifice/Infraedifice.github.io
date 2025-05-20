@@ -1,0 +1,712 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.4">Jekyll</generator><link href="https://infraedifice.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://infraedifice.github.io/" rel="alternate" type="text/html" /><updated>2025-05-20T15:06:57+10:00</updated><id>https://infraedifice.github.io/feed.xml</id><title type="html">InfraEdifice</title><subtitle>Azure, PowerShell</subtitle><author><name>Chiru Adapa</name></author><entry><title type="html">Orchestration of Exchange online mailbox size reports using Azure automation &amp;amp; Microsoft Graph API</title><link href="https://infraedifice.github.io/automation/Orchestrating-mailbox-size-reports-using-Azure-automation/" rel="alternate" type="text/html" title="Orchestration of Exchange online mailbox size reports using Azure automation &amp;amp; Microsoft Graph API" /><published>2022-02-22T00:00:00+10:00</published><updated>2022-02-22T00:00:00+10:00</updated><id>https://infraedifice.github.io/automation/Orchestrating%20mailbox%20size%20reports%20using%20Azure%20automation</id><content type="html" xml:base="https://infraedifice.github.io/automation/Orchestrating-mailbox-size-reports-using-Azure-automation/"><![CDATA[<p>Reporting in M365 has come a long way. We all know that anyone with the proper access can view the M365 reports in the admin portal with a splendid graphical view. What if the operations team wants to get the notifications to a mailbox if the mailbox size reaches a specific limit (example use case)? My initial thoughts were to use SendGrid to send emails, but I thought we could use graph API and an Azure AD application to send emails rather than relying on a third-party email solution. I planned to use Azure automation to query the mailbox size from the Exchange online &amp; use Microsoft Graph API to send emails.</p>
+
+<p>Upon researching how to automate the mailbox size reports using Azure automation &amp; Microsoft Graph API, I came to the following solution.</p>
+
+<p><img src="/assets/images/Email orchestration/Solution-Overview.png" alt="Solution Overview" /></p>
+
+<p><strong>Solution Overview</strong></p>
+
+<p>The Azure run as account will extract Exchange online mailbox statistics using Azure automation in the solution. Suppose we find any mailboxes that are above a specific limit. In that case, the automation account will query the Azure key vault to retrieve credentials of an Azure AD application to send email alerts using Microsoft Graph API.</p>
+
+<p>You can learn more about Microsoft Graph API on how to send emails.</p>
+
+<p><a href="https://docs.microsoft.com/en-us/graph/outlook-mail-concept-overview?view=graph-rest-1.0">Microsoft Graph API documentation</a></p>
+
+<p>We need the following to achieve the above solution.</p>
+
+<ul>
+  <li><strong>Azure Automation Account</strong></li>
+  <li><strong>Exchange online module</strong></li>
+  <li><strong>Microsoft Graph API</strong></li>
+  <li><strong>Azure Key Vault</strong></li>
+</ul>
+
+<h2 id="azure-automation-account">Azure Automation Account</h2>
+
+<p>You need to have an Azure automation account to run Azure automation jobs. Upon automation account &amp; new runbook creation, you need to assign the Exchange administrator permission to run as account service principal. You can give the permissions via PowerShell or from GUI. 
+You need to install the Exchange online module PowerShell in the automation account. You can get that from the modules gallery, as shown below.</p>
+
+<p><img src="/assets/images/Email orchestration/Azure-Roles&amp;Responsibilities.png" alt="Assigning Exchange administrator role to service principal" />
+Exchange Administrator role in Azure AD roles &amp; responsibilites.</p>
+
+<p><img src="/assets/images/Email orchestration/ExchangeAdmnistrator-Runasaccount-Serviceprincipal.png" alt="Assigning Exchange administrator role to service principal" />
+Assigning Exchange administrator role to run as account service principal.</p>
+
+<p><img src="/assets/images/Email orchestration/Exchange Online Module - Automation account.png" alt="Install Exchange online module" />
+Exchange online powershell module</p>
+
+<p><img src="/assets/images/Email orchestration/Exchange Online-Browse Gallery - Microsoft Azure.png" alt="Install Exchange online module" />
+Exchange online powershell module in the gallery.</p>
+
+<h2 id="app-registration-in-azure-ad">App registration in Azure AD</h2>
+
+<p>Create and register a new application in Azure AD to send emails using Microsoft Graph API. Upon creating and registering the application, you need to assign Microsoft Graph API permissions to send emails on behalf of users. You need to choose application permissions in the Microsoft Graph API.</p>
+
+<p><img src="/assets/images/Email orchestration/Request API permissions - Microsoft Azure.png" alt="Microsoft Graph API Permissions" />
+Microsoft Graph API permissions.</p>
+
+<p><img src="/assets/images/Email orchestration/Microsoft Graph API permissions - Microsoft Azure.png" alt="Microsoft Graph API Permissions" />
+Assigning Microsoft Graph API application permissions.</p>
+
+<p><img src="/assets/images/Email orchestration/Microsoft Graph API -Permissions.png" alt="Microsoft Graph API Permissions" />
+Microsoft Graph API permissions on the Azure AD Application.</p>
+
+<p>Now, we need to authenticate the application from the custom code in the runbook. I will do this by configuring a client secret in the application. Make sure to copy the secret upon creation as you can’t see the client secret again.</p>
+
+<p><img src="/assets/images/Email orchestration/Azure AD Application- Client Secret.png" alt="Azure AD Application Client Secret" />
+Client secret in Azure AD Application.</p>
+
+<h2 id="azure-key-vault">Azure key Vault</h2>
+
+<p>We will leverage Azure Key Vault to securely store the client secret we created for the Azure AD Application. We manually generate a new secret in the Azure key vault. Upon holding the client secret, we will assign “Get” permissions to the “run as account” in the key vault access policies to retrieve the secret. We don’t need any other permissions as we are just retrieving the secret.</p>
+
+<p><img src="/assets/images/Email orchestration/Azure-key-Vault  - Microsoft Azure.png" alt="Azure Key Vault Secret" />
+Generate secret in Azure key Vault.</p>
+
+<p><img src="/assets/images/Email orchestration/Create a secret - Azure Key Vault - Microsoft Azure.png" alt="Azure Key Vault Secret" /></p>
+
+<p>Run the below code to send secure emails from the Azure automation runbook using Graph API.</p>
+
+<p>I categorized the code into three parts.</p>
+
+<ul>
+  <li><strong>Import modules &amp; Azure Automation account connection</strong></li>
+  <li><strong>Mailbox size report from Exchange online</strong></li>
+  <li><strong>Microsoft Graph API to send emails</strong></li>
+</ul>
+
+<h2 id="import-modules--azure-automation-account-connection">Import modules &amp; Azure Automation account connection</h2>
+
+<p>You need to import the Azure, Azure key vault and Exchange online modules and connect to the Azure automation account from the runbook as shown below.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Import-module</span><span class="w"> </span><span class="nx">AZ.Accounts</span><span class="w">
+</span><span class="n">Import-module</span><span class="w"> </span><span class="nx">Az.Keyvault</span><span class="w">
+</span><span class="n">Import-module</span><span class="w"> </span><span class="nx">Exchangeonlinemanagement</span><span class="w">
+
+</span><span class="c">### Connecting to Azure Automation Account ###</span><span class="w">
+</span><span class="kr">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+
+    </span><span class="nv">$connection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-AutomationConnection</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="nx">AzureRunAsConnection</span><span class="w">
+    </span><span class="nv">$tenantName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"test.onmicrosoft.com"</span><span class="w">
+    </span><span class="nv">$Azureaccount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Connect-AzAccount</span><span class="w"> </span><span class="se">`
+</span><span class="w">        </span><span class="nt">-ServicePrincipal</span><span class="w"> </span><span class="se">`
+</span><span class="w">        </span><span class="nt">-TenantId</span><span class="w"> </span><span class="nv">$Connection</span><span class="o">.</span><span class="nf">TenantId</span><span class="w"> </span><span class="se">`
+</span><span class="w">        </span><span class="nt">-ApplicationId</span><span class="w"> </span><span class="nv">$Connection</span><span class="o">.</span><span class="nf">ApplicationId</span><span class="w"> </span><span class="se">`
+</span><span class="w">        </span><span class="nt">-CertificateThumbprint</span><span class="w"> </span><span class="nv">$Connection</span><span class="o">.</span><span class="nf">CertificateThumbprint</span><span class="w"> 
+</span><span class="p">}</span><span class="w">
+</span><span class="kr">catch</span><span class="w">
+</span><span class="p">{</span><span class="w">
+    </span><span class="kr">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nv">$Connection</span><span class="p">)</span><span class="w">
+
+    </span><span class="p">{</span><span class="w">
+        </span><span class="c">## Run as Account not configured ##</span><span class="w">
+        </span><span class="nv">$error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Connecting to </span><span class="nv">$connection</span><span class="s2"> failed"</span><span class="w">
+        </span><span class="kr">throw</span><span class="w"> </span><span class="nv">$error</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    </span><span class="kr">else</span><span class="w">
+    </span><span class="p">{</span><span class="w">
+        </span><span class="c">## Something else went wrong ##</span><span class="w">
+        </span><span class="n">write-error</span><span class="w"> </span><span class="nt">-message</span><span class="w"> </span><span class="bp">$_</span><span class="o">.</span><span class="nf">Exception</span><span class="o">.</span><span class="nf">message</span><span class="w">
+        </span><span class="nx">throw</span><span class="w"> </span><span class="bp">$_</span><span class="o">.</span><span class="nf">Exception</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span></code></pre></div></div>
+
+<h2 id="mailbox-size-report-from-exchange-online">Mailbox size report from Exchange online</h2>
+
+<p>Authentication to Exchange online will be done using the “run as account”.   Run the below PowerShell code to extract the mailbox size report for mailboxes greater than a specific limit.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w">
+</span><span class="c">### Connecting to Exchange online ###</span><span class="w">
+</span><span class="n">Connect-ExchangeOnline</span><span class="w"> </span><span class="nt">-CertificateThumbprint</span><span class="w"> </span><span class="nv">$connection</span><span class="o">.</span><span class="nf">CertificateThumbprint</span><span class="w"> </span><span class="nt">-AppId</span><span class="w"> </span><span class="nv">$connection</span><span class="o">.</span><span class="nf">ApplicationID</span><span class="w"> </span><span class="nt">-Organization</span><span class="w"> </span><span class="nv">$tenantName</span><span class="w"> </span><span class="nt">-Verbose</span><span class="w">
+</span><span class="c"># Date Format</span><span class="w">
+</span><span class="nv">$CurrentDate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">get-date</span><span class="p">)</span><span class="o">.</span><span class="nf">ToString</span><span class="p">(</span><span class="s1">'yyyy-MM-dd'</span><span class="p">)</span><span class="w">
+</span><span class="nv">$CurrentDate</span><span class="w">
+</span><span class="c">#Mailboxes</span><span class="w">
+</span><span class="nv">$Mailboxes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-Mailbox</span><span class="w"> </span><span class="nt">-ResultSize</span><span class="w"> </span><span class="nx">Unlimited</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nx">Name</span><span class="p">,</span><span class="w"> </span><span class="nx">Alias</span><span class="p">,</span><span class="w"> </span><span class="nx">ExchangeGuid</span><span class="w">
+</span><span class="nv">$Output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@()</span><span class="w">
+</span><span class="nv">$i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$Mailbox</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$Mailboxes</span><span class="p">)</span><span class="w">
+</span><span class="p">{</span><span class="w">
+    </span><span class="nv">$Mailboxsize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-MailboxStatistics</span><span class="w"> </span><span class="nt">-Identity</span><span class="w"> </span><span class="s2">"</span><span class="si">$(</span><span class="nv">$mailbox</span><span class="o">.</span><span class="nf">ExchangeGuid</span><span class="si">)</span><span class="s2">"</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nx">DisplayName</span><span class="p">,</span><span class="w"> </span><span class="nx">MailboxTypeDetail</span><span class="p">,</span><span class="w"> </span><span class="p">@{</span><span class="nx">name</span><span class="o">=</span><span class="err">”</span><span class="nx">TotalItemSize</span><span class="err">”</span><span class="p">;</span><span class="w"> </span><span class="nx">expression</span><span class="o">=</span><span class="p">{[</span><span class="n">math</span><span class="p">]::</span><span class="n">Round</span><span class="p">((</span><span class="bp">$_</span><span class="o">.</span><span class="nf">TotalItemSize</span><span class="o">.</span><span class="nf">ToString</span><span class="p">()</span><span class="o">.</span><span class="nf">Split</span><span class="p">(</span><span class="err">“</span><span class="p">(</span><span class="err">“</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="nf">Split</span><span class="p">(</span><span class="err">”</span><span class="w"> </span><span class="err">“</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="nf">Replace</span><span class="p">(</span><span class="err">“</span><span class="p">,</span><span class="err">”</span><span class="p">,</span><span class="err">””</span><span class="p">)</span><span class="n">/1GB</span><span class="p">),</span><span class="mi">2</span><span class="p">)}},</span><span class="w"> </span><span class="nx">IsArchiveMailbox</span><span class="w">
+
+    </span><span class="kr">if</span><span class="w"> </span><span class="p">(</span><span class="nv">$mailboxsize</span><span class="o">.</span><span class="nf">TotalItemSize</span><span class="w"> </span><span class="o">-gt</span><span class="w"> </span><span class="s2">"90"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+        
+        </span><span class="nv">$Mailboxesabovelimit</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">New-Object</span><span class="w"> </span><span class="nt">-TypeName</span><span class="w"> </span><span class="nx">psobject</span><span class="w"> </span><span class="nt">-Property</span><span class="w"> </span><span class="p">@{</span><span class="w">
+
+            </span><span class="nx">DisplayName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$Mailboxsize</span><span class="err">.</span><span class="nx">DisplayName</span><span class="w">
+            </span><span class="nx">Emailaddress</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$mailbox</span><span class="err">.</span><span class="nx">PrimarySmtpAddress</span><span class="w">
+            </span><span class="nx">MailboxType</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$Mailboxsize</span><span class="err">.</span><span class="nx">MailboxTypeDetail</span><span class="w">
+            </span><span class="nx">MailboxSize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$Mailboxsize</span><span class="err">.</span><span class="nx">TotalItemSize</span><span class="w">
+            </span><span class="nx">ArchiveStatus</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$Mailboxsize</span><span class="err">.</span><span class="nx">IsArchiveMailbox</span><span class="w">
+            
+        </span><span class="p">}</span><span class="w">
+        </span><span class="nv">$Output</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nv">$Mailboxesabovelimit</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+    </span><span class="nv">$i</span><span class="o">++</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="nv">$Output</span><span class="w">
+
+</span><span class="nv">$filename</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"MailboxSizes"</span><span class="o">+</span><span class="s2">"</span><span class="nv">$currentdate</span><span class="s2">"</span><span class="o">+</span><span class="s2">"."</span><span class="o">+</span><span class="s2">"csv"</span><span class="w">
+
+</span><span class="nv">$filename</span><span class="w">
+
+</span><span class="nv">$path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"</span><span class="nv">$</span><span class="nn">Env</span><span class="p">:</span><span class="nv">temp</span><span class="s2">\</span><span class="nv">$filename</span><span class="s2">"</span><span class="w">
+
+</span><span class="nv">$path</span><span class="w">
+
+</span><span class="nv">$Output</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Export-Csv</span><span class="w"> </span><span class="nt">-Path</span><span class="w"> </span><span class="nv">$path</span><span class="w"> </span><span class="nt">-NoTypeInformation</span><span class="w">
+
+</span></code></pre></div></div>
+
+<h2 id="microsoft-graph-api-to-send-emails">Microsoft Graph API to send emails</h2>
+
+<p>Run the below code to send the emails using Graph API securely. You can modify the email template as per your requirement. I used a shared mailbox to send notification emails.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w">
+</span><span class="kr">if</span><span class="w"> </span><span class="p">(</span><span class="nv">$Output</span><span class="p">)</span><span class="w">
+</span><span class="p">{</span><span class="w">
+
+</span><span class="nv">$base64string</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">convert</span><span class="p">]::</span><span class="n">ToBase64String</span><span class="p">((</span><span class="n">Get-Content</span><span class="w"> </span><span class="nt">-path</span><span class="w"> </span><span class="nv">$path</span><span class="w"> </span><span class="nt">-Encoding</span><span class="w"> </span><span class="nx">byte</span><span class="p">))</span><span class="w">
+
+</span><span class="c">#### key vault Name ###</span><span class="w">
+
+</span><span class="nv">$keyvault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Enter your Keyvault name"</span><span class="w">
+
+</span><span class="c">### Secret Name in the key Vault ###</span><span class="w">
+
+</span><span class="nv">$keyvaultSecretName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Enter your secret name from the Keyvault"</span><span class="w">
+
+</span><span class="c">### Application ID of the Azure AD App registration ###</span><span class="w">
+
+</span><span class="nv">$Application_ID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"xxxx-xxxx-xxxxx-12345"</span><span class="w">
+
+</span><span class="c">### Tenant ID of the Azure AD App registration ###</span><span class="w">
+
+</span><span class="nv">$TenantID</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$connection</span><span class="o">.</span><span class="nf">TenantId</span><span class="w">
+
+</span><span class="c">### From Address of the Email from Exchange online ###</span><span class="w">
+
+</span><span class="nv">$from</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"notification@test.com"</span><span class="w">
+
+</span><span class="c">### To Address of the email ###</span><span class="w">
+
+</span><span class="nv">$to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"testuser@test.com"</span><span class="w">
+
+</span><span class="c">### Getting the secret from Azure Keyvault ###</span><span class="w">
+
+</span><span class="nv">$secret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-AzKeyVaultSecret</span><span class="w"> </span><span class="nt">-VaultName</span><span class="w"> </span><span class="nv">$KeyVault</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="nv">$KeyVaultSecretName</span><span class="w">
+
+
+</span><span class="nv">$Securestringpointer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">System.Runtime.InteropServices.Marshal</span><span class="p">]::</span><span class="n">SecureStringToBSTR</span><span class="p">(</span><span class="nv">$secret</span><span class="o">.</span><span class="nf">SecretValue</span><span class="p">)</span><span class="w">
+
+
+</span><span class="kr">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+
+   </span><span class="nv">$secretValueText</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="n">System.Runtime.InteropServices.Marshal</span><span class="p">]::</span><span class="n">PtrToStringBSTR</span><span class="p">(</span><span class="nv">$Securestringpointer</span><span class="p">)</span><span class="w">
+
+</span><span class="p">}</span><span class="w"> 
+
+</span><span class="kr">finally</span><span class="w"> </span><span class="p">{</span><span class="w">
+  
+   </span><span class="p">[</span><span class="n">System.Runtime.InteropServices.Marshal</span><span class="p">]::</span><span class="n">ZeroFreeBSTR</span><span class="p">(</span><span class="nv">$Securestringpointer</span><span class="p">)</span><span class="w">
+
+</span><span class="p">}</span><span class="w">
+
+
+</span><span class="nv">$client_secret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$secretValueText</span><span class="w">
+
+</span><span class="nv">$request</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w">
+        </span><span class="nx">Method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">'POST'</span><span class="w">
+        </span><span class="nx">URI</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://login.microsoftonline.com/xxxxxxxxxx/oauth2/v2.0/token"</span><span class="w">
+        </span><span class="nx">body</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w">
+            </span><span class="nx">grant_type</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">"client_credentials"</span><span class="w">
+            </span><span class="nx">scope</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://graph.microsoft.com/.default"</span><span class="w">
+            </span><span class="nx">client_id</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="nv">$Application_ID</span><span class="w">
+            </span><span class="nx">client_secret</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$client_secret</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="p">}</span><span class="w">
+</span><span class="nv">$token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Invoke-RestMethod</span><span class="w"> </span><span class="err">@</span><span class="nx">request</span><span class="p">)</span><span class="o">.</span><span class="nf">access_token</span><span class="w">
+
+</span><span class="c">#$token</span><span class="w">
+
+</span><span class="c">## Build the Microsoft Graph API request</span><span class="w">
+
+</span><span class="c">## Header ##</span><span class="w">
+
+</span><span class="nv">$headers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@{</span><span class="w">
+    </span><span class="s2">"Authorization"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Bearer </span><span class="si">$(</span><span class="nv">$token</span><span class="si">)</span><span class="s2">"</span><span class="w">
+    </span><span class="s2">"Content-type"</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">"application/json"</span><span class="w">
+</span><span class="p">}</span><span class="w">
+
+</span><span class="c">## Sending email ##</span><span class="w">
+
+</span><span class="nv">$sendURL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"https://graph.microsoft.com/v1.0/users/</span><span class="nv">$from</span><span class="s2">/sendMail"</span><span class="w">
+
+</span><span class="nv">$mailbody</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sh">@"
+                    {
+                        "message": {
+                          "subject": "MailboxSize Report - </span><span class="nv">$CurrentDate</span><span class="sh">",
+                          "body": {
+                            "contentType": "HTML",
+                            "content": "Email content."
+                          },
+                          
+                          "toRecipients": [
+                            {
+                              "emailAddress": {
+                                "address": "</span><span class="nv">$to</span><span class="sh">"
+                              }
+                            }
+                          ]
+                          ,"attachments": [
+                            {
+                              "@</span><span class="n">odata.type</span><span class="s2">": "</span><span class="c">#microsoft.graph.fileAttachment",</span><span class="w">
+                              </span><span class="s2">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"</span><span class="nv">$FileName</span><span class="s2">"</span><span class="p">,</span><span class="w">
+                              </span><span class="s2">"contentType"</span><span class="p">:</span><span class="w"> </span><span class="s2">"text/csv"</span><span class="p">,</span><span class="w">
+                              </span><span class="s2">"contentBytes"</span><span class="p">:</span><span class="w"> </span><span class="s2">"</span><span class="nv">$base64string</span><span class="s2">"</span><span class="w">
+                            </span><span class="p">}</span><span class="w">
+                          </span><span class="err">]</span><span class="w">
+                        </span><span class="p">},</span><span class="w">
+                        </span><span class="s2">"saveToSentItems"</span><span class="p">:</span><span class="w"> </span><span class="s2">"false"</span><span class="w">
+                      </span><span class="p">}</span><span class="w">
+</span><span class="s2">"@
+
+Invoke-RestMethod -Method POST -Uri </span><span class="nv">$sendURL</span><span class="s2"> -Headers </span><span class="nv">$headers</span><span class="s2"> -Body </span><span class="nv">$mailbody</span><span class="s2">
+
+}
+
+else
+{
+    Write-Verbose -Verbose "</span><span class="n">Customized</span><span class="w"> </span><span class="nx">error</span><span class="w"> </span><span class="nx">message</span><span class="s2">"
+}
+
+</span></code></pre></div></div>
+
+<p>You can schedule the runbook as per your requirement.</p>
+
+<p>I hope you enjoy the blog!</p>
+
+<p>Chiru</p>]]></content><author><name>Chiru Adapa</name></author><category term="Automation" /><category term="Azure Runbook" /><category term="Azure automation" /><category term="Microsoft Graph API" /><category term="Orchestration" /><summary type="html"><![CDATA[Automate M365 reports using Azure runbook & Graph API]]></summary></entry><entry><title type="html">GPO report on Active Directory OU with PowerShell</title><link href="https://infraedifice.github.io/automation/GPO-via-PowerShell/" rel="alternate" type="text/html" title="GPO report on Active Directory OU with PowerShell" /><published>2021-04-01T00:00:00+10:00</published><updated>2021-04-01T00:00:00+10:00</updated><id>https://infraedifice.github.io/automation/GPO%20via%20PowerShell</id><content type="html" xml:base="https://infraedifice.github.io/automation/GPO-via-PowerShell/"><![CDATA[<p>Hello readers, in this blog I’m going to explain how to identify which GPO (Group Policy Object) is applied on an AD OU.</p>
+
+<p>In my experience with large organizations where Active Directory contains hundreds of OU (Organization Units) &amp; whenever an IT admin wants to access the GPO report, they need to access the group policy management console to check which  GPO is applied on what OU.</p>
+
+<p>One of my clients approached me to get the report of existing GPO’s so that they can analyze the stale GPO &amp; remediate them. You can get that by using Get-Gporeport from Microsoft docs but the report is in either HTML or XML &amp; the client wants to know which GPO is applied on what OU.
+My client wants to read it in a quick user-friendly way (excel report), so I decided to export the GPO report using PowerShell. The way I did it is by querying each OU in Active Directory &amp; check which GPO is applied on it. 
+So, all you need is an Active Directory administrator access &amp; AD module installed in PowerShell. This script provides the following.</p>
+
+<ol>
+  <li><strong>Display Name of GPO</strong></li>
+  <li><strong>GPO enabled on OU</strong></li>
+  <li><strong>GPO enforced on OU</strong></li>
+</ol>
+
+<p>By using the above 3 you should be able to report if a GPO is applied on an AD OU or not. Let’s dive into the PowerShell script.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># This script uses a function to check the AD module installation and loads it if it's not loaded already. </span><span class="w">
+</span><span class="kr">Function</span><span class="w"> </span><span class="nf">Check-ADModule</span><span class="w">
+</span><span class="p">{</span><span class="w">
+  </span><span class="kr">Try</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nv">$check</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-Addomain</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+  </span><span class="kr">catch</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+  </span><span class="nv">$fault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$error</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="nf">exception</span><span class="o">.</span><span class="nf">message</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+ </span><span class="kr">if</span><span class="w"> </span><span class="p">(</span><span class="nv">$check</span><span class="p">)</span><span class="w">
+ </span><span class="p">{</span><span class="w">
+  </span><span class="n">Write-Host</span><span class="w"> </span><span class="nt">-ForegroundColor</span><span class="w"> </span><span class="nx">Cyan</span><span class="w"> </span><span class="s2">"Active Directory module loaded"</span><span class="w">
+ </span><span class="p">}</span><span class="w">
+ </span><span class="kr">else</span><span class="w">
+ </span><span class="p">{</span><span class="w">
+  </span><span class="n">Write-Host</span><span class="w"> </span><span class="nt">-ForegroundColor</span><span class="w"> </span><span class="nx">red</span><span class="w"> </span><span class="s2">"We need to Import Active Directory Module"</span><span class="w">
+  </span><span class="n">Import-Module</span><span class="w"> </span><span class="nx">ActiveDirectory</span><span class="w">
+  </span><span class="c"># The above command imports AD module.</span><span class="w">
+ </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="c"># This Script Gives information about all the GPO's associated with each OU in the domain. </span><span class="w">
+</span><span class="c"># In this script we get the OU information first and then we will get the GPO links for each of them.</span><span class="w">
+</span><span class="n">Check-ADModule</span><span class="w">
+</span><span class="c"># The above Function checks for AD Module Installation.  </span><span class="w">
+</span><span class="nv">$OU</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-adorganizationalunit</span><span class="w"> </span><span class="nt">-filter</span><span class="w"> </span><span class="s1">'Name -like "*"'</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select</span><span class="w"> </span><span class="nx">Name</span><span class="p">,</span><span class="w"> </span><span class="nx">DistinguishedName</span><span class="w">
+</span><span class="nv">$i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span><span class="nv">$count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$ou</span><span class="o">.</span><span class="nf">count</span><span class="w">
+</span><span class="nv">$a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@()</span><span class="w">
+</span><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$obj</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$OU</span><span class="p">)</span><span class="w">
+</span><span class="p">{</span><span class="w">
+</span><span class="n">Write-Progress</span><span class="w"> </span><span class="nt">-Activity</span><span class="w"> </span><span class="s2">"Getting GPO information on all the </span><span class="si">$(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">Name</span><span class="si">)</span><span class="s2">"</span><span class="w"> </span><span class="nt">-Status</span><span class="w"> </span><span class="s2">"</span><span class="nv">$i</span><span class="s2"> of </span><span class="nv">$count</span><span class="s2">"</span><span class="w"> </span><span class="nt">-PercentComplete</span><span class="w"> </span><span class="p">(</span><span class="nv">$i</span><span class="n">/</span><span class="nv">$count</span><span class="o">*</span><span class="nx">100</span><span class="p">)</span><span class="w">
+    </span><span class="nv">$gpo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Get-ADOrganizationalUnit</span><span class="w"> </span><span class="nt">-Identity</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">DistinguishedName</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Get-GPInheritance</span><span class="p">)</span><span class="o">.</span><span class="nf">Gpolinks</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select</span><span class="w"> </span><span class="nx">GPOID</span><span class="p">,</span><span class="w"> </span><span class="nx">DisplayName</span><span class="p">,</span><span class="w"> </span><span class="nx">Enabled</span><span class="p">,</span><span class="w"> </span><span class="nx">Enforced</span><span class="p">,</span><span class="w"> </span><span class="nx">Target</span><span class="p">,</span><span class="w"> </span><span class="nx">Order</span><span class="w">
+      </span><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$GP</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$gpo</span><span class="p">)</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">New-Object</span><span class="w"> </span><span class="nx">psobject</span><span class="w"> 
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"OU Name"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">Name</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"DistinguishedName"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">DistinguishedName</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"GPODisplayName"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">DisplayName</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"GPOID"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">GpoId</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Target"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Target</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Enabled"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Enabled</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Enforced"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Enforced</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Order"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Order</span><span class="w">
+            </span><span class="nv">$a</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nv">$result</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+        </span><span class="c"># End of Foreach loop for GPO. </span><span class="w">
+    </span><span class="nv">$i</span><span class="o">++</span><span class="w">
+</span><span class="p">}</span><span class="w"> </span><span class="c"># End of script.</span><span class="w">
+</span><span class="nv">$filepath</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"GPOresults"</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">Get-date</span><span class="w"> </span><span class="nt">-Format</span><span class="w"> </span><span class="s2">"dd-MM-yyyy HH:mm:ss"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">".Csv"</span><span class="w">
+</span><span class="c"># The above command creates a filepath and name to store the GP Results. </span><span class="w">
+</span><span class="nv">$a</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Export-Csv</span><span class="w"> </span><span class="nt">-Path</span><span class="w"> </span><span class="nv">$filepath</span><span class="w"> </span><span class="nt">-NoTypeInformation</span><span class="w">
+</span></code></pre></div></div>
+<p>Above is a simple script that will query the AD organization units for GPO (Group Policy Objects) linked on the OU’s or enforced on them. The script comprises 3 parts.</p>
+
+<ol>
+  <li><strong>Module Check</strong></li>
+  <li><strong>Main Script</strong></li>
+  <li><strong>Output</strong></li>
+</ol>
+
+<p>Let’s talk about each of them.</p>
+
+<h2 id="1-module-check"><strong>1. Module Check</strong></h2>
+
+<p>Most of the people run the script without checking for pre-requisite modules. I’ve done that in the initial days of my career. So I thought it would be good to include a function that will check if the required module is installed or not. The below function achieves it by running “Get-ADdomain” cmdlet which is loaded to a variable. If the cmdlet retrieves the result then AD module is installed if not “Import-Module Active Directory” cmdlet will do it for you.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">Function</span><span class="w"> </span><span class="nf">Check-ADModule</span><span class="w">
+</span><span class="p">{</span><span class="w">
+  </span><span class="kr">Try</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+    </span><span class="nv">$check</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-Addomain</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+  </span><span class="kr">catch</span><span class="w">
+  </span><span class="p">{</span><span class="w">
+  </span><span class="nv">$fault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$error</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="nf">exception</span><span class="o">.</span><span class="nf">message</span><span class="w">
+  </span><span class="p">}</span><span class="w">
+ </span><span class="kr">if</span><span class="w"> </span><span class="p">(</span><span class="nv">$check</span><span class="p">)</span><span class="w">
+ </span><span class="p">{</span><span class="w">
+  </span><span class="n">Write-Host</span><span class="w"> </span><span class="nt">-ForegroundColor</span><span class="w"> </span><span class="nx">Cyan</span><span class="w"> </span><span class="s2">"Active Directory module loaded"</span><span class="w">
+ </span><span class="p">}</span><span class="w">
+ </span><span class="kr">else</span><span class="w">
+ </span><span class="p">{</span><span class="w">
+  </span><span class="n">Write-Host</span><span class="w"> </span><span class="nt">-ForegroundColor</span><span class="w"> </span><span class="nx">red</span><span class="w"> </span><span class="s2">"We need to Import Active Directory Module"</span><span class="w">
+  </span><span class="n">Import-Module</span><span class="w"> </span><span class="nx">ActiveDirectory</span><span class="w">
+  </span><span class="c"># The above command imports the AD module.</span><span class="w">
+ </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="c"># This Script Gives information about all the GPO's associated with each OU in the domain. </span><span class="w">
+</span><span class="c"># In this script we get the OU information first and then we will get the GPO links for each of them.</span><span class="w">
+</span><span class="n">Check-ADModule</span><span class="w">
+</span></code></pre></div></div>
+<h2 id="2-main-script"><strong>2. Main Script</strong></h2>
+
+<p>This is where the action takes place, in here script will query all the AD Ou’s using “Get-ADOrganizationunit” cmdlet &amp; the script will loop into each of the OU to query GPO. I specified an empty array “a” to store the output.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$OU</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-adorganizationalunit</span><span class="w"> </span><span class="nt">-filter</span><span class="w"> </span><span class="s1">'Name -like "*"'</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select</span><span class="w"> </span><span class="nx">Name</span><span class="p">,</span><span class="w"> </span><span class="nx">DistinguishedName</span><span class="w">
+</span><span class="nv">$i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span><span class="nv">$count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$ou</span><span class="o">.</span><span class="nf">count</span><span class="w">
+</span><span class="nv">$a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@()</span><span class="w">
+</span><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$obj</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$OU</span><span class="p">)</span><span class="w">
+</span><span class="p">{</span><span class="w">
+</span><span class="n">Write-Progress</span><span class="w"> </span><span class="nt">-Activity</span><span class="w"> </span><span class="s2">"Getting GPO information on all the </span><span class="si">$(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">Name</span><span class="si">)</span><span class="s2">"</span><span class="w"> </span><span class="nt">-Status</span><span class="w"> </span><span class="s2">"</span><span class="nv">$i</span><span class="s2"> of </span><span class="nv">$count</span><span class="s2">"</span><span class="w"> </span><span class="nt">-PercentComplete</span><span class="w"> </span><span class="p">(</span><span class="nv">$i</span><span class="n">/</span><span class="nv">$count</span><span class="o">*</span><span class="nx">100</span><span class="p">)</span><span class="w">
+    </span><span class="nv">$gpo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">Get-ADOrganizationalUnit</span><span class="w"> </span><span class="nt">-Identity</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">DistinguishedName</span><span class="p">)</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Get-GPInheritance</span><span class="p">)</span><span class="o">.</span><span class="nf">Gpolinks</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select</span><span class="w"> </span><span class="nx">GPOID</span><span class="p">,</span><span class="w"> </span><span class="nx">DisplayName</span><span class="p">,</span><span class="w"> </span><span class="nx">Enabled</span><span class="p">,</span><span class="w"> </span><span class="nx">Enforced</span><span class="p">,</span><span class="w"> </span><span class="nx">Target</span><span class="p">,</span><span class="w"> </span><span class="nx">Order</span><span class="w">
+      </span><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$GP</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$gpo</span><span class="p">)</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">New-Object</span><span class="w"> </span><span class="nx">psobject</span><span class="w"> 
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"OU Name"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">Name</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"DistinguishedName"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">DistinguishedName</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"GPODisplayName"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">DisplayName</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"GPOID"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">GpoId</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Target"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Target</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Enabled"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Enabled</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Enforced"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Enforced</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Order"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$gp</span><span class="o">.</span><span class="nf">Order</span><span class="w">
+            </span><span class="nv">$a</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nv">$result</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+        </span><span class="c"># End of Foreach loop for GPO. </span><span class="w">
+    </span><span class="nv">$i</span><span class="o">++</span><span class="w">
+</span><span class="p">}</span><span class="w"> </span><span class="c"># End of script.</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="3-output"><strong>3. Output</strong></h2>
+
+<p>Once you got the result, you need to store it into a CSV file so that you can present it to the client &amp; client IT team can run this whenever they want to know the GPO’s applied on each OU or to keep it as an inventory or they can schedule this job to run weekly or monthly.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$filepath</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"GPOresults"</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">Get-date</span><span class="w"> </span><span class="nt">-Format</span><span class="w"> </span><span class="s2">"dd-MM-yyyy HH:mm:ss"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">".Csv"</span><span class="w">
+</span><span class="c"># The above command creates a filepath and name to store the GP Results. </span><span class="w">
+</span><span class="nv">$a</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Export-Csv</span><span class="w"> </span><span class="nt">-Path</span><span class="w"> </span><span class="nv">$filepath</span><span class="w"> </span><span class="nt">-NoTypeInformation</span><span class="w">
+</span></code></pre></div></div>
+
+<p>Chiru</p>]]></content><author><name>Chiru Adapa</name></author><category term="Automation" /><category term="Group Policy Object" /><category term="PowerShell" /><category term="Active Directory" /><summary type="html"><![CDATA[Extract GPO report on AD OU's with PowerShell]]></summary></entry><entry><title type="html">Auditing your DNS Records with PowerShell</title><link href="https://infraedifice.github.io/dns%20records/DNS/" rel="alternate" type="text/html" title="Auditing your DNS Records with PowerShell" /><published>2021-03-25T00:00:00+10:00</published><updated>2021-03-25T00:00:00+10:00</updated><id>https://infraedifice.github.io/dns%20records/DNS</id><content type="html" xml:base="https://infraedifice.github.io/dns%20records/DNS/"><![CDATA[<p>This blog is all about DNS. I’m sure most of the IT people will know what DNS is. Especially if you’re an Infrastructure guy i’m sure you know what i’m talking. 
+I’ve been to a client who had a massive number of DNS records &amp; I’ve been tasked to remediate stale DNS records. 
+My initial thought’s were how do i find stale records &amp; how do i convience customer what i found are stale records. In this process i thought the following will be helpful in convincing customer.</p>
+
+<ol>
+  <li><strong>Discover</strong>.</li>
+  <li><strong>Test</strong>.</li>
+  <li><strong>Remediate</strong>.</li>
+</ol>
+
+<h2 id="1discover">1.<strong><em>Discover</em></strong></h2>
+<p>Initial step is to discover the DNS records that are in the organization. In order to do that i harnessed the power of Powershell. In this extraction we are mainly focused on “Name Server” records in DNS zones in the organization because by testing NS records we are able to say if the record is valid or invalid. Usually there will be DNS servers in every organization. So i will be running the script on each server to get the DNS zones and NS records associated to the zones.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$DNS</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-DnsServerZone</span><span class="w"> </span><span class="nt">-computerName</span><span class="w"> </span><span class="s2">"Server Name"</span><span class="w">
+</span><span class="nv">$Array</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@()</span><span class="w">
+</span><span class="nv">$Count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$DNS</span><span class="o">.</span><span class="nf">count</span><span class="w">
+</span><span class="nv">$i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span></code></pre></div></div>
+<p>So the above command will query the DNS zones in DNS Server and I created a empty array to store all the records which will be extracted into a csv file.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$obj</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$DNS</span><span class="p">)</span><span class="w">
+</span><span class="p">{</span><span class="w">
+    </span><span class="n">Write-Progress</span><span class="w"> </span><span class="nt">-Activity</span><span class="w"> </span><span class="s2">"Getting info for </span><span class="nv">$obj</span><span class="s2">.Zonename"</span><span class="w"> </span><span class="nt">-Status</span><span class="w"> </span><span class="s2">"</span><span class="nv">$i</span><span class="s2"> of </span><span class="nv">$count</span><span class="s2">"</span><span class="w"> </span><span class="nt">-PercentComplete</span><span class="w"> </span><span class="p">(</span><span class="nv">$i</span><span class="n">/</span><span class="nv">$count</span><span class="o">*</span><span class="nx">100</span><span class="p">)</span><span class="w">
+    </span><span class="nv">$ResourceRecords</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-DnsServerResourceRecord</span><span class="w"> </span><span class="nt">-ComputerName</span><span class="w"> </span><span class="s2">"Server Name"</span><span class="w"> </span><span class="nt">-ZoneName</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$obj</span><span class="o">.</span><span class="nf">Zonename</span><span class="p">)</span><span class="w"> </span><span class="nt">-RRType</span><span class="w"> </span><span class="n">NS</span><span class="w">
+</span></code></pre></div></div>
+<p>Above will give us all the DNS zones in the DNS server and it will store the value in a variable. As we had so many zones in the DNS records, i thought it will be helpfull to visualize how many zones are there and their information. I’m able to achieve it via “Write-progress” cmdlet which i found usefull.</p>
+
+<h2 id="2test">2.<strong><em>Test</em></strong></h2>
+<p>Now in this phase i decided to test the name server records that i extracted and stored in the variable “ResourceRecords”
+This is a vital part in the script. In this part Power Shell cmdlet will try to resolve every Name Server record that it extracted in the above.
+If the cmdlet is able to resolve the name server record then it’s valid otherwise it’s an invalid record.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$zone</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$Resourcerecords</span><span class="p">)</span><span class="w">
+        </span><span class="p">{</span><span class="w"> 
+          </span><span class="kr">Try</span><span class="w"> 
+          </span><span class="p">{</span><span class="w">
+            </span><span class="nv">$ns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Resolve-DnsName</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$zone</span><span class="o">.</span><span class="nf">RecordData</span><span class="p">)</span><span class="o">.</span><span class="nf">NameServer</span><span class="w"> 
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">New-Object</span><span class="w"> </span><span class="nx">psobject</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Name"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$ns</span><span class="o">.</span><span class="nf">Name</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+         </span><span class="kr">Catch</span><span class="w">
+          </span><span class="p">{</span><span class="w">
+            </span><span class="nv">$error</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="nf">Exception</span><span class="o">.</span><span class="nf">Message</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Name"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$error</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="nf">exception</span><span class="o">.</span><span class="nf">Message</span><span class="p">)</span><span class="w">
+          </span><span class="p">}</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"ZoneName"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$obj</span><span class="o">.</span><span class="nf">ZoneName</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"zoneType"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$obj</span><span class="o">.</span><span class="nf">ZoneType</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"ReverseLookupZone"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$obj</span><span class="o">.</span><span class="nf">Isreverselookupzone</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Hostname"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$Zone</span><span class="o">.</span><span class="nf">Hostname</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"RecordData"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$zone</span><span class="o">.</span><span class="nf">recorddata</span><span class="p">)</span><span class="o">.</span><span class="nf">Nameserver</span><span class="w">
+            </span><span class="nv">$record</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Add-Member</span><span class="w"> </span><span class="nt">-Type</span><span class="w"> </span><span class="nx">NoteProperty</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"IPAddress"</span><span class="w"> </span><span class="nt">-Value</span><span class="w"> </span><span class="nv">$ns</span><span class="o">.</span><span class="nf">Ipaddress</span><span class="w">
+            </span><span class="nv">$array</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nv">$record</span><span class="w">
+        </span><span class="p">}</span><span class="w"> </span><span class="c">#end of $zone foreach loop</span><span class="w">
+            </span><span class="nv">$i</span><span class="o">++</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span><span class="nv">$array</span><span class="w"> 
+</span><span class="c">#End of Script</span><span class="w">
+</span></code></pre></div></div>
+<p>With the Array variable, you can save the records to a csv file. I haven’t included the “csv file” storage part in the script as the csv file storage spot will vary to the users who run the script.</p>
+
+<h2 id="3remediate">3.<strong><em>Remediate</em></strong></h2>
+
+<p>We achieved the most difficult part of the task which is extracting the records and finding a valid record. I haven’t included how to purge name server records in the script as DNS records are vital for every organization and it wouldn’t be wise purging them without proper process and approval from client. Once the records are peer reviewed by the client you can always import the reviewed csv file to a variable and can use the following powershell cmdlet to remove the records.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Remove-dnsserverresourcerecord</span><span class="w"> </span><span class="nt">-Name</span><span class="w"> </span><span class="s2">"Hostname of the record"</span><span class="w"> </span><span class="nt">-RRtype</span><span class="w"> </span><span class="s2">"NS"</span><span class="w"> </span><span class="nt">-recorddata</span><span class="w"> </span><span class="s2">"name of name server record"</span><span class="w"> </span><span class="nt">-zonename</span><span class="w"> </span><span class="s2">"zone name"</span><span class="w"> </span><span class="nt">-computername</span><span class="w"> </span><span class="s2">"Server name"</span><span class="w">
+</span></code></pre></div></div>
+<h2 id="note--above-script-is-compatible-with-windows-server-from-2012-this-wont-work-on-windows-server-2008"><strong>Note</strong>:- Above script is compatible with Windows Server from 2012. This won’t work on windows server 2008.</h2>
+
+<p>In this Blog I shared with you my Powershell scripts to solve stale DNS records</p>
+
+<p>Chiru</p>]]></content><author><name>Chiru Adapa</name></author><category term="DNS Records" /><category term="DNS" /><summary type="html"><![CDATA[How to extract DNS records & test if they're valid or not]]></summary></entry><entry><title type="html">Monitoring your Azure Backups with KQL</title><link href="https://infraedifice.github.io/automation/MonitorAzureBackupswithKQL/" rel="alternate" type="text/html" title="Monitoring your Azure Backups with KQL" /><published>2021-03-25T00:00:00+10:00</published><updated>2021-03-25T00:00:00+10:00</updated><id>https://infraedifice.github.io/automation/MonitorAzureBackupswithKQL</id><content type="html" xml:base="https://infraedifice.github.io/automation/MonitorAzureBackupswithKQL/"><![CDATA[<p>Back in the day no one worried about monitoring &amp; reporting, now as companies focus on security, there’s a growing interest in
+monitoring &amp; reporting.</p>
+
+<p>This blog post will walk you through how I configured Azure monitoring &amp; dashboard solution for clients on their existing Azure VM’s.</p>
+
+<p>In order to configure Azure monitoring, you need to perform the following:</p>
+
+<ol>
+  <li><strong>Analyze the Logs</strong></li>
+  <li><strong>Visualize the logs into user friendly view</strong></li>
+</ol>
+
+<h2 id="1analyze-the-logs">1.<strong>Analyze the Logs</strong></h2>
+
+<p>My initial task was to investigate where the logs are stored. Usually we quickly browse to event manager for servers &amp; computers but in Azure we need to enable the following diagnostics on the virtual machine to feed data to “Log Analytics Workspace”.</p>
+
+<ul>
+  <li><strong>AddonAzureBackupJobs</strong></li>
+  <li><strong>CoreAzureBackup</strong></li>
+</ul>
+
+<blockquote>
+  <p>You can also enable different events on the VM’s diagnostic settings based on your desired output.</p>
+</blockquote>
+
+<p>Once you’ve made these changes to the diagnostic settings, allow 24hrs for initial data push to complete.</p>
+
+<p>Next we need to read the logs which are required for monitoring. We can achieve this by leveraging the power of KQL (Kusto Query language).</p>
+
+<h2 id="backup-monitoring-script">Backup Monitoring Script</h2>
+
+<p>I composed this KQL script to monitor the backup status of set of Azure virtual machines. This script mainly relies on the “backupItem” operation to get the desired output.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w">
+</span><span class="n">AddonAzureBackupJobs</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">where</span><span class="w"> </span><span class="nx">TimeGenerated</span><span class="w"> </span><span class="err">&gt;</span><span class="w"> </span><span class="nx">ago</span><span class="p">(</span><span class="mi">24</span><span class="n">h</span><span class="p">)</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">parse</span><span class="w"> </span><span class="nx">ResourceId</span><span class="w"> </span><span class="nx">with</span><span class="w"> </span><span class="s2">"/"</span><span class="nx">Subscriptions</span><span class="s2">"/"</span><span class="nx">id</span><span class="s2">"/"</span><span class="nx">RG</span><span class="s2">"/"</span><span class="nx">ResourceGroup</span><span class="s2">"/"</span><span class="nx">Provid</span><span class="s2">"/"</span><span class="nx">Services</span><span class="s2">"/"</span><span class="nx">safe</span><span class="s2">"/"</span><span class="nx">RecoveryServiceVault</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">where</span><span class="w"> </span><span class="nx">ResourceGroup</span><span class="w"> </span><span class="nx">in</span><span class="w"> </span><span class="p">(</span><span class="s2">"ResourceGroup1"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ResourceGroup2"</span><span class="p">)</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">project</span><span class="w"> </span><span class="nx">ResourceGroup</span><span class="p">,</span><span class="w"> </span><span class="nx">RecoveryServiceVault</span><span class="p">,</span><span class="w"> </span><span class="nx">TimeGenerated</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">BackupResult</span><span class="o">=</span><span class="n">JobFailureCode</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">JobStatus</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">JobUniqueId</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">BackupItemUniqueId</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">join</span><span class="w"> </span><span class="nx">kind</span><span class="o">=</span><span class="w"> </span><span class="n">inner</span><span class="w">
+</span><span class="p">(</span><span class="w">
+</span><span class="n">CoreAzureBackup</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">where</span><span class="w"> </span><span class="nx">OperationName</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"BackupItem"</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">project</span><span class="w"> </span><span class="nx">TimeGenerated</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">VMName</span><span class="o">=</span><span class="n">BackupItemFriendlyName</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">BackupItemUniqueId</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">ResourceGroupName</span><span class="w">
+</span><span class="p">)</span><span class="w">
+</span><span class="n">on</span><span class="w"> </span><span class="nx">BackupItemUniqueId</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">project-away</span><span class="w"> </span><span class="nx">BackupItemUniqueId</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">project</span><span class="w"> </span><span class="nx">TimeGenerated</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">VMName</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">BackupResult</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">JobStatus</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">JobUniqueId</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">ResourceGroup</span><span class="p">,</span><span class="w"> </span><span class="nx">RecoveryServiceVault</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">distinct</span><span class="w"> </span><span class="nx">TimeGenerated</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">VMName</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">BackupResult</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">JobStatus</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">JobUniqueId</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">ResourceGroup</span><span class="p">,</span><span class="w"> </span><span class="nx">RecoveryServiceVault</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">sort</span><span class="w"> </span><span class="nx">by</span><span class="w"> </span><span class="nx">TimeGenerated</span><span class="w"> </span><span class="nx">asc</span><span class="w"> </span><span class="nx">nulls</span><span class="w"> </span><span class="nx">first</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">summarize</span><span class="w"> </span><span class="nx">Result</span><span class="o">=</span><span class="n">count</span><span class="p">()</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="nx">BackupResult</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">VMName</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">JobStatus</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">TimeGenerated</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">ResourceGroup</span><span class="p">,</span><span class="w"> </span><span class="nx">RecoveryServiceVault</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">render</span><span class="w"> </span><span class="nx">piechart</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>In the above script, I’m querying “AddonAzureBackupJobs” event &amp; I’m parsing recovery service vault where the VM’s are located in specific resource groups.</p>
+
+<p>As mentioned, I’m configuring the backup report for a set of virtual machines not for all the virtual machines in Azure.</p>
+
+<p>Now I’m leveraging join operator to join “AddonAzureBackupJobs” &amp; “CoreAzureBackup” event tables. I’m joining the tabes on “BackupItemUniqueID” to get the unique values of backup results.</p>
+
+<p>Below is the part of KQL code which performs the operation.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">join</span><span class="w"> </span><span class="nx">kind</span><span class="o">=</span><span class="w"> </span><span class="n">inner</span><span class="w">
+</span><span class="p">(</span><span class="w">
+</span><span class="n">CoreAzureBackup</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">where</span><span class="w"> </span><span class="nx">OperationName</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"BackupItem"</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">project</span><span class="w"> </span><span class="nx">TimeGenerated</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">VMName</span><span class="o">=</span><span class="n">BackupItemFriendlyName</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">BackupItemUniqueId</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">ResourceGroupName</span><span class="w">
+</span><span class="p">)</span><span class="w">
+</span><span class="n">on</span><span class="w"> </span><span class="nx">BackupItemUniqueId</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>Once I joined the two event tables, I’m projecting the required outputs “Timegenerated, VMName, Backupresult, jobstatus, jobuniqueId, resourcegroup &amp; recoveryservicevault”.</p>
+
+<p>After projecting the desired outputs, I’m marking the outputs based on “timegenerated”, I’m able to achieve this by using the “distinct” operator in KQL.</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">distinct</span><span class="w"> </span><span class="nx">TimeGenerated</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">VMName</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">BackupResult</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">JobStatus</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">JobUniqueId</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">ResourceGroup</span><span class="p">,</span><span class="w"> </span><span class="nx">RecoveryServiceVault</span><span class="w">
+
+</span></code></pre></div></div>
+
+<h2 id="visualize-the-logs-into-user-friendly-view">Visualize the logs into user friendly view</h2>
+
+<p>After getting the desired output, I want to present the results to stakeholders &amp; operation managers.</p>
+
+<p>In order to convert the technical ouput into a user friendly view I chose to use PieChart. You can use different visualization methods it all depends on how stakeholders want to see the output.</p>
+
+<p>So, to setup a piechart displaying how many VM’s are successfully backed up. I used the following PowerShell:</p>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">summarize</span><span class="w"> </span><span class="nx">Result</span><span class="o">=</span><span class="n">count</span><span class="p">()</span><span class="w"> </span><span class="n">by</span><span class="w"> </span><span class="nx">BackupResult</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">VMName</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">JobStatus</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">TimeGenerated</span><span class="w"> </span><span class="p">,</span><span class="w"> </span><span class="nx">ResourceGroup</span><span class="p">,</span><span class="w"> </span><span class="nx">RecoveryServiceVault</span><span class="w">
+</span><span class="o">|</span><span class="w"> </span><span class="n">render</span><span class="w"> </span><span class="nx">piechart</span><span class="w">
+
+</span></code></pre></div></div>
+
+<p>Once everyone is satisfied with the result, you can always pin your resulting piechart of other visualization to the Azure dashboard, so rather than executing the KQL script above everytime you can simply check Azure dashboard for the results.</p>
+
+<p>Chiru</p>]]></content><author><name>Chiru Adapa</name></author><category term="Automation" /><category term="LogAnalytics" /><category term="KQL" /><category term="Azure Backups" /><category term="Azure Monitoring" /><summary type="html"><![CDATA[Configure Azure backup status with KQL]]></summary></entry><entry><title type="html">Creating your AAD AppProxy Application Inventory with PowerShell</title><link href="https://infraedifice.github.io/automation/Creating-your-AAD-AppProxy-Application-Inventory-with-PowerShell/" rel="alternate" type="text/html" title="Creating your AAD AppProxy Application Inventory with PowerShell" /><published>2021-03-15T00:00:00+10:00</published><updated>2021-03-15T00:00:00+10:00</updated><id>https://infraedifice.github.io/automation/Creating%20your%20AAD%20AppProxy%20Application%20Inventory%20with%20PowerShell</id><content type="html" xml:base="https://infraedifice.github.io/automation/Creating-your-AAD-AppProxy-Application-Inventory-with-PowerShell/"><![CDATA[<p>Recently during an Azure AD Application Proxy (App Proxy) deployment project with one of our clients, I was asked to provide a list of applications that were onboarded into App Proxy. Namely the client needed the <code class="language-plaintext highlighter-rouge">Internal Url</code>, <code class="language-plaintext highlighter-rouge">External URL</code> &amp; <code class="language-plaintext highlighter-rouge">DisplayName</code> of the application.</p>
+
+<p>Now there’s two primary methods of retriving these details. The first method being to export them manually into a .csv file or alternatively - automate it with PowerShell!</p>
+
+<p>If there are a small number of applications, then exporting them manually wouldn’t take that long but if you have a large list of applications to parse a better and scalable solution would be to automate this task.</p>
+
+<p>And this is where I like to harness the efficiencies of PowerShell. Unfortunately, there’s no single PowerShell cmdlet which will give us a complete output of App Proxy applications and our desired details <code class="language-plaintext highlighter-rouge">Internal Url</code>, <code class="language-plaintext highlighter-rouge">External URL</code> &amp; <code class="language-plaintext highlighter-rouge">DisplayName</code>. So, after doing a bit of research online and testing PowerShell cmdlets I came to this final version of a script which uses Azure AD PowerShell connection to retrieve the results.</p>
+
+<p>The PowerShell Script below is categorized into 3 parts</p>
+
+<ol>
+  <li><strong>Function (To check the connection to Azure PowerShell)</strong></li>
+  <li><strong>Core Script</strong></li>
+  <li><strong>Output</strong></li>
+</ol>
+
+<h2 id="1-function-to-check-the-connection-to-azure-powershell"><strong>1. Function (To check the connection to Azure PowerShell)</strong></h2>
+
+<ul>
+  <li>This part will check if the user is connected to Azure PowerShell.</li>
+  <li>By using this we can avoid multiple connections to Azure PowerShell and Azure AD MFA (If Enabled) requests.</li>
+</ul>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">### Start of Function to check the Logins###</span><span class="w">
+
+</span><span class="kr">Function</span><span class="w"> </span><span class="nf">Login-check</span><span class="w">
+</span><span class="p">{</span><span class="w">
+    </span><span class="kr">try</span><span class="w">
+     </span><span class="p">{</span><span class="w">
+        </span><span class="nv">$Az</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-AzureADDomain</span><span class="w"> </span><span class="nt">-ErrorAction</span><span class="w"> </span><span class="nx">Stop</span><span class="w">
+     </span><span class="p">}</span><span class="w">
+    </span><span class="kr">catch</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+            </span><span class="nv">$Fault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">$PSItem</span><span class="o">.</span><span class="nf">message</span><span class="o">.</span><span class="nf">exception</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="kr">if</span><span class="w"> </span><span class="p">(</span><span class="nv">$Az</span><span class="p">)</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+           </span><span class="n">Write-Host</span><span class="w"> </span><span class="nt">-ForegroundColor</span><span class="w"> </span><span class="nx">Cyan</span><span class="w"> </span><span class="s2">"User logged into Azure"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="kr">else</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+           </span><span class="n">Write-Host</span><span class="w"> </span><span class="nt">-ForegroundColor</span><span class="w"> </span><span class="nx">red</span><span class="w"> </span><span class="s2">"Login Required"</span><span class="w">
+           </span><span class="n">Connect-AzureAD</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="2-core-script"><strong>2. Core Script</strong></h2>
+
+<ul>
+  <li>This part of the script will retrieve us the information about all the applications in Azure AD with ObjectId.</li>
+  <li>I initiated a counter so that we can see which application the script is processing.</li>
+  <li>I loop each of these applications and check if they’re onboarded to app-proxy.</li>
+  <li>For the ones that are not on-boarded to app-proxy the PowerShell cmdlet gives an error which is captured.</li>
+  <li>I defined an empty variable in the loop to capture all the required information.</li>
+</ul>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">### Start of core Script###</span><span class="w">
+</span><span class="n">Login-check</span><span class="w">
+</span><span class="nv">$App</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-AzureADApplication</span><span class="w"> </span><span class="nt">-All</span><span class="w"> </span><span class="bp">$true</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nx">Displayname</span><span class="p">,</span><span class="w"> </span><span class="nx">ObjectId</span><span class="w">
+</span><span class="nv">$i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span><span class="nv">$Appproxy_List</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@()</span><span class="w">
+</span><span class="nv">$count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$app</span><span class="o">.</span><span class="nf">count</span><span class="w">
+</span><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$apps</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$app</span><span class="p">)</span><span class="w">
+</span><span class="p">{</span><span class="w">
+    </span><span class="n">Write-Progress</span><span class="w"> </span><span class="nt">-Activity</span><span class="w"> </span><span class="s2">"Getting </span><span class="si">$(</span><span class="nv">$apps</span><span class="o">.</span><span class="nf">DisplayName</span><span class="si">)</span><span class="s2"> App-proxy information"</span><span class="w"> </span><span class="nt">-Status</span><span class="w"> </span><span class="s2">"</span><span class="nv">$i</span><span class="s2"> of </span><span class="nv">$count</span><span class="s2">"</span><span class="w"> </span><span class="nt">-PercentComplete</span><span class="w"> </span><span class="p">(</span><span class="nv">$i</span><span class="n">/</span><span class="nv">$count</span><span class="o">*</span><span class="nx">100</span><span class="p">)</span><span class="w">
+      </span><span class="kr">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nv">$proxy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-AzureADApplicationProxyApplication</span><span class="w"> </span><span class="nt">-ObjectId</span><span class="w"> </span><span class="s2">"</span><span class="si">$(</span><span class="nv">$apps</span><span class="o">.</span><span class="nf">Objectid</span><span class="si">)</span><span class="s2">"</span><span class="w"> </span><span class="nt">-ErrorAction</span><span class="w"> </span><span class="nx">Stop</span><span class="w">
+            </span><span class="c">#####The Above cmdlet is used to get list of App-proxy Applications###########</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">" "</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nx">DisplayName</span><span class="p">,</span><span class="w"> </span><span class="nx">ObjectId</span><span class="p">,</span><span class="w"> </span><span class="nx">InternalUrl</span><span class="p">,</span><span class="w"> </span><span class="nx">ExternalUrl</span><span class="w">
+            </span><span class="nv">$result</span><span class="o">.</span><span class="nf">DisplayName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$apps</span><span class="o">.</span><span class="nf">Displayname</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$result</span><span class="o">.</span><span class="nf">ObjectId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$apps</span><span class="o">.</span><span class="nf">Objectid</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$result</span><span class="o">.</span><span class="nf">InternalUrl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$proxy</span><span class="o">.</span><span class="nf">InternalUrl</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$result</span><span class="o">.</span><span class="nf">ExternalUrl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$proxy</span><span class="o">.</span><span class="nf">ExternalUrl</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$Appproxy_List</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nv">$result</span><span class="w">
+          </span><span class="p">}</span><span class="w"> </span><span class="c">#End of Try Statement</span><span class="w">
+      </span><span class="kr">catch</span><span class="w"> </span><span class="p">{</span><span class="w">   
+             </span><span class="nv">$Problem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">$PSItem</span><span class="o">.</span><span class="nf">exception</span><span class="o">.</span><span class="nf">message</span><span class="w">         
+            </span><span class="p">}</span><span class="w"> </span><span class="c">#End of Catch statement</span><span class="w">
+    </span><span class="nv">$i</span><span class="o">++</span><span class="w">
+</span><span class="p">}</span><span class="w"> </span><span class="c">#End of Foreach loop</span><span class="w">
+</span><span class="c">### End of Core ###</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="3-output"><strong>3. Output</strong></h2>
+
+<ul>
+  <li>I defined a saving directory where the output is saved.</li>
+  <li>I defined file name with date and time.</li>
+  <li>Script will create a directory if it doesn’t exist else it will save the file in the directory.</li>
+  <li>Lastly, we will export the output as CSV file to the path specified.</li>
+</ul>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">### Output ###</span><span class="w">
+</span><span class="nv">$SavingDirectory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"C:\Temp\"</span><span class="w">
+</span><span class="kr">If</span><span class="w"> </span><span class="p">((</span><span class="n">Test-Path</span><span class="w"> </span><span class="nt">-Path</span><span class="w"> </span><span class="nv">$SavingDirectory</span><span class="p">)</span><span class="w"> </span><span class="o">-eq</span><span class="w"> </span><span class="bp">$false</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">New-Item</span><span class="w"> </span><span class="nt">-ItemType</span><span class="w"> </span><span class="nx">Directory</span><span class="w"> </span><span class="nt">-Path</span><span class="w"> </span><span class="nv">$SavingDirectory</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Out-Null</span><span class="p">}</span><span class="w">
+</span><span class="nv">$Filepath</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$SavingDirectory</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">"App-proxy Application list Master Copy"</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">" "</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">Get-Date</span><span class="w"> </span><span class="nt">-Format</span><span class="w"> </span><span class="s2">"dd-MM-yyyy_HH.mm.ss"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">".csv"</span><span class="w">
+</span><span class="nv">$Appproxy_List</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Export-Csv</span><span class="w"> </span><span class="nt">-Path</span><span class="w"> </span><span class="nv">$Filepath</span><span class="w"> </span><span class="nt">-NoTypeInformation</span><span class="w">
+</span><span class="c">##### End of Script##############################################</span><span class="w">
+</span></code></pre></div></div>
+
+<p>I hope this post has been helpful to you in retrieving Azure AD Application Proxy (App Proxy) details using PowerShell</p>
+
+<p>Chiru</p>]]></content><author><name>Chiru Adapa</name></author><category term="Automation" /><category term="AppProxy" /><category term="PowerShell" /><category term="Azure AD" /><summary type="html"><![CDATA[Extract list of Azure AD App Proxy applications with PowerShell]]></summary></entry></feed>

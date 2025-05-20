@@ -1,0 +1,614 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.18.1 by Michael Rose
+  Copyright 2013-2019 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>Creating your AAD AppProxy Application Inventory with PowerShell | InfraEdifice</title>
+<meta name="description" content="Extract list of Azure AD App Proxy applications with PowerShell ">
+
+
+  <meta name="author" content="Chiru Adapa">
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_AU">
+<meta property="og:site_name" content="InfraEdifice">
+<meta property="og:title" content="Creating your AAD AppProxy Application Inventory with PowerShell">
+<meta property="og:url" content="https://infraedifice.github.io/automation/Creating-your-AAD-AppProxy-Application-Inventory-with-PowerShell/">
+
+
+  <meta property="og:description" content="Extract list of Azure AD App Proxy applications with PowerShell ">
+
+
+
+  <meta property="og:image" content="https://infraedifice.github.io/assets/images/AppproxyApplicationinventory-blog-imagr.png">
+
+
+
+  <meta name="twitter:site" content="@">
+  <meta name="twitter:title" content="Creating your AAD AppProxy Application Inventory with PowerShell">
+  <meta name="twitter:description" content="Extract list of Azure AD App Proxy applications with PowerShell ">
+  <meta name="twitter:url" content="https://infraedifice.github.io/automation/Creating-your-AAD-AppProxy-Application-Inventory-with-PowerShell/">
+
+  
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://infraedifice.github.io/assets/images/AppproxyApplicationinventory-blog-imagr.png">
+  
+
+  
+
+
+
+  <meta property="article:published_time" content="2021-03-15T00:00:00+10:00">
+
+
+
+
+
+  
+
+  
+
+
+<link rel="canonical" href="https://infraedifice.github.io/automation/Creating-your-AAD-AppProxy-Application-Inventory-with-PowerShell/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Chiru Adapa",
+      "url": "https://infraedifice.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="InfraEdifice Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="shortcut icon" type="image/png" href="/assets/images/favicon.png">
+
+<!--[if IE]>
+  <style>
+    /* old IE unsupported flexbox fixes */
+    .greedy-nav .site-title {
+      padding-right: 3em;
+    }
+    .greedy-nav button {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+    }
+  </style>
+<![endif]-->
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single wide">
+    <nav class="skip-links">
+  <h2 class="screen-reader-text">Skip links</h2>
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/Blog_Profile.png" alt=""></a>
+        
+        <a class="site-title" href="/">
+          InfraEdifice
+          <span class="site-subtitle">It always seems impossible until it's done</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li><li class="masthead__menu-item">
+              <a href="https://github.com/Infraedifice/infraedifice.github.io">GitHub</a>
+            </li></ul>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  
+  
+    
+      
+      
+      
+      
+    
+    
+      
+
+<nav class="nav__list">
+  
+  <input id="ac-toc" name="accordion-toc" type="checkbox" />
+  <label for="ac-toc">Toggle menu</label>
+  <ul class="nav__items">
+    
+  </ul>
+</nav>
+
+    
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="Creating your AAD AppProxy Application Inventory with PowerShell">
+    <meta itemprop="description" content="Extract list of Azure AD App Proxy applications with PowerShell">
+    <meta itemprop="datePublished" content="2021-03-15T00:00:00+10:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">Creating your AAD AppProxy Application Inventory with PowerShell
+</h1>
+          
+            <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  3 minute read
+
+</p>
+          
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu">
+  <li><a href="#1-function-to-check-the-connection-to-azure-powershell">1. Function (To check the connection to Azure PowerShell)</a></li>
+  <li><a href="#2-core-script">2. Core Script</a></li>
+  <li><a href="#3-output">3. Output</a></li>
+</ul>
+
+            </nav>
+          </aside>
+        
+        <p>Recently during an Azure AD Application Proxy (App Proxy) deployment project with one of our clients, I was asked to provide a list of applications that were onboarded into App Proxy. Namely the client needed the <code class="language-plaintext highlighter-rouge">Internal Url</code>, <code class="language-plaintext highlighter-rouge">External URL</code> &amp; <code class="language-plaintext highlighter-rouge">DisplayName</code> of the application.</p>
+
+<p>Now there’s two primary methods of retriving these details. The first method being to export them manually into a .csv file or alternatively - automate it with PowerShell!</p>
+
+<p>If there are a small number of applications, then exporting them manually wouldn’t take that long but if you have a large list of applications to parse a better and scalable solution would be to automate this task.</p>
+
+<p>And this is where I like to harness the efficiencies of PowerShell. Unfortunately, there’s no single PowerShell cmdlet which will give us a complete output of App Proxy applications and our desired details <code class="language-plaintext highlighter-rouge">Internal Url</code>, <code class="language-plaintext highlighter-rouge">External URL</code> &amp; <code class="language-plaintext highlighter-rouge">DisplayName</code>. So, after doing a bit of research online and testing PowerShell cmdlets I came to this final version of a script which uses Azure AD PowerShell connection to retrieve the results.</p>
+
+<p>The PowerShell Script below is categorized into 3 parts</p>
+
+<ol>
+  <li><strong>Function (To check the connection to Azure PowerShell)</strong></li>
+  <li><strong>Core Script</strong></li>
+  <li><strong>Output</strong></li>
+</ol>
+
+<h2 id="1-function-to-check-the-connection-to-azure-powershell"><strong>1. Function (To check the connection to Azure PowerShell)</strong></h2>
+
+<ul>
+  <li>This part will check if the user is connected to Azure PowerShell.</li>
+  <li>By using this we can avoid multiple connections to Azure PowerShell and Azure AD MFA (If Enabled) requests.</li>
+</ul>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">### Start of Function to check the Logins###</span><span class="w">
+
+</span><span class="kr">Function</span><span class="w"> </span><span class="nf">Login-check</span><span class="w">
+</span><span class="p">{</span><span class="w">
+    </span><span class="kr">try</span><span class="w">
+     </span><span class="p">{</span><span class="w">
+        </span><span class="nv">$Az</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-AzureADDomain</span><span class="w"> </span><span class="nt">-ErrorAction</span><span class="w"> </span><span class="nx">Stop</span><span class="w">
+     </span><span class="p">}</span><span class="w">
+    </span><span class="kr">catch</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+            </span><span class="nv">$Fault</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">$PSItem</span><span class="o">.</span><span class="nf">message</span><span class="o">.</span><span class="nf">exception</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="kr">if</span><span class="w"> </span><span class="p">(</span><span class="nv">$Az</span><span class="p">)</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+           </span><span class="n">Write-Host</span><span class="w"> </span><span class="nt">-ForegroundColor</span><span class="w"> </span><span class="nx">Cyan</span><span class="w"> </span><span class="s2">"User logged into Azure"</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+    </span><span class="kr">else</span><span class="w">
+        </span><span class="p">{</span><span class="w">
+           </span><span class="n">Write-Host</span><span class="w"> </span><span class="nt">-ForegroundColor</span><span class="w"> </span><span class="nx">red</span><span class="w"> </span><span class="s2">"Login Required"</span><span class="w">
+           </span><span class="n">Connect-AzureAD</span><span class="w">
+        </span><span class="p">}</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="2-core-script"><strong>2. Core Script</strong></h2>
+
+<ul>
+  <li>This part of the script will retrieve us the information about all the applications in Azure AD with ObjectId.</li>
+  <li>I initiated a counter so that we can see which application the script is processing.</li>
+  <li>I loop each of these applications and check if they’re onboarded to app-proxy.</li>
+  <li>For the ones that are not on-boarded to app-proxy the PowerShell cmdlet gives an error which is captured.</li>
+  <li>I defined an empty variable in the loop to capture all the required information.</li>
+</ul>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">### Start of core Script###</span><span class="w">
+</span><span class="n">Login-check</span><span class="w">
+</span><span class="nv">$App</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-AzureADApplication</span><span class="w"> </span><span class="nt">-All</span><span class="w"> </span><span class="bp">$true</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nx">Displayname</span><span class="p">,</span><span class="w"> </span><span class="nx">ObjectId</span><span class="w">
+</span><span class="nv">$i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="w">
+</span><span class="nv">$Appproxy_List</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">@()</span><span class="w">
+</span><span class="nv">$count</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$app</span><span class="o">.</span><span class="nf">count</span><span class="w">
+</span><span class="kr">Foreach</span><span class="w"> </span><span class="p">(</span><span class="nv">$apps</span><span class="w"> </span><span class="kr">in</span><span class="w"> </span><span class="nv">$app</span><span class="p">)</span><span class="w">
+</span><span class="p">{</span><span class="w">
+    </span><span class="n">Write-Progress</span><span class="w"> </span><span class="nt">-Activity</span><span class="w"> </span><span class="s2">"Getting </span><span class="si">$(</span><span class="nv">$apps</span><span class="o">.</span><span class="nf">DisplayName</span><span class="si">)</span><span class="s2"> App-proxy information"</span><span class="w"> </span><span class="nt">-Status</span><span class="w"> </span><span class="s2">"</span><span class="nv">$i</span><span class="s2"> of </span><span class="nv">$count</span><span class="s2">"</span><span class="w"> </span><span class="nt">-PercentComplete</span><span class="w"> </span><span class="p">(</span><span class="nv">$i</span><span class="n">/</span><span class="nv">$count</span><span class="o">*</span><span class="nx">100</span><span class="p">)</span><span class="w">
+      </span><span class="kr">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+            </span><span class="nv">$proxy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Get-AzureADApplicationProxyApplication</span><span class="w"> </span><span class="nt">-ObjectId</span><span class="w"> </span><span class="s2">"</span><span class="si">$(</span><span class="nv">$apps</span><span class="o">.</span><span class="nf">Objectid</span><span class="si">)</span><span class="s2">"</span><span class="w"> </span><span class="nt">-ErrorAction</span><span class="w"> </span><span class="nx">Stop</span><span class="w">
+            </span><span class="c">#####The Above cmdlet is used to get list of App-proxy Applications###########</span><span class="w">
+            </span><span class="nv">$result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">" "</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Select-Object</span><span class="w"> </span><span class="nx">DisplayName</span><span class="p">,</span><span class="w"> </span><span class="nx">ObjectId</span><span class="p">,</span><span class="w"> </span><span class="nx">InternalUrl</span><span class="p">,</span><span class="w"> </span><span class="nx">ExternalUrl</span><span class="w">
+            </span><span class="nv">$result</span><span class="o">.</span><span class="nf">DisplayName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$apps</span><span class="o">.</span><span class="nf">Displayname</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$result</span><span class="o">.</span><span class="nf">ObjectId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$apps</span><span class="o">.</span><span class="nf">Objectid</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$result</span><span class="o">.</span><span class="nf">InternalUrl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$proxy</span><span class="o">.</span><span class="nf">InternalUrl</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$result</span><span class="o">.</span><span class="nf">ExternalUrl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="err">$</span><span class="p">(</span><span class="nv">$proxy</span><span class="o">.</span><span class="nf">ExternalUrl</span><span class="p">)</span><span class="w">
+            </span><span class="nv">$Appproxy_List</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="nv">$result</span><span class="w">
+          </span><span class="p">}</span><span class="w"> </span><span class="c">#End of Try Statement</span><span class="w">
+      </span><span class="kr">catch</span><span class="w"> </span><span class="p">{</span><span class="w">   
+             </span><span class="nv">$Problem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="bp">$PSItem</span><span class="o">.</span><span class="nf">exception</span><span class="o">.</span><span class="nf">message</span><span class="w">         
+            </span><span class="p">}</span><span class="w"> </span><span class="c">#End of Catch statement</span><span class="w">
+    </span><span class="nv">$i</span><span class="o">++</span><span class="w">
+</span><span class="p">}</span><span class="w"> </span><span class="c">#End of Foreach loop</span><span class="w">
+</span><span class="c">### End of Core ###</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="3-output"><strong>3. Output</strong></h2>
+
+<ul>
+  <li>I defined a saving directory where the output is saved.</li>
+  <li>I defined file name with date and time.</li>
+  <li>Script will create a directory if it doesn’t exist else it will save the file in the directory.</li>
+  <li>Lastly, we will export the output as CSV file to the path specified.</li>
+</ul>
+
+<div class="language-powershell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">### Output ###</span><span class="w">
+</span><span class="nv">$SavingDirectory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"C:\Temp\"</span><span class="w">
+</span><span class="kr">If</span><span class="w"> </span><span class="p">((</span><span class="n">Test-Path</span><span class="w"> </span><span class="nt">-Path</span><span class="w"> </span><span class="nv">$SavingDirectory</span><span class="p">)</span><span class="w"> </span><span class="o">-eq</span><span class="w"> </span><span class="bp">$false</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="n">New-Item</span><span class="w"> </span><span class="nt">-ItemType</span><span class="w"> </span><span class="nx">Directory</span><span class="w"> </span><span class="nt">-Path</span><span class="w"> </span><span class="nv">$SavingDirectory</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Out-Null</span><span class="p">}</span><span class="w">
+</span><span class="nv">$Filepath</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nv">$SavingDirectory</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">"App-proxy Application list Master Copy"</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">" "</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">(</span><span class="n">Get-Date</span><span class="w"> </span><span class="nt">-Format</span><span class="w"> </span><span class="s2">"dd-MM-yyyy_HH.mm.ss"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">".csv"</span><span class="w">
+</span><span class="nv">$Appproxy_List</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">Export-Csv</span><span class="w"> </span><span class="nt">-Path</span><span class="w"> </span><span class="nv">$Filepath</span><span class="w"> </span><span class="nt">-NoTypeInformation</span><span class="w">
+</span><span class="c">##### End of Script##############################################</span><span class="w">
+</span></code></pre></div></div>
+
+<p>I hope this post has been helpful to you in retrieving Azure AD Application Proxy (App Proxy) details using PowerShell</p>
+
+<p>Chiru</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/tags/#appproxy" class="page__taxonomy-item" rel="tag">AppProxy</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#azure-ad" class="page__taxonomy-item" rel="tag">Azure AD</a><span class="sep">, </span>
+    
+      
+      
+      <a href="/tags/#powershell" class="page__taxonomy-item" rel="tag">PowerShell</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+  
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      
+      
+      <a href="/categories/#automation" class="page__taxonomy-item" rel="tag">Automation</a>
+    
+    </span>
+  </p>
+
+
+        
+          <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2021-03-15T00:00:00+10:00">March 15, 2021</time></p>
+        
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?via=&text=Creating+your+AAD+AppProxy+Application+Inventory+with+PowerShell%20https%3A%2F%2Finfraedifice.github.io%2Fautomation%2FCreating-your-AAD-AppProxy-Application-Inventory-with-PowerShell%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on Twitter="><i class="fab fa-fw fa-twitter" aria-hidden="true"></i></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Finfraedifice.github.io%2Fautomation%2FCreating-your-AAD-AppProxy-Application-Inventory-with-PowerShell%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="#" class="pagination--pager disabled">Previous</a>
+    
+    
+      <a href="/dns%20records/DNS/" class="pagination--pager" title="Auditing your DNS Records with PowerShell
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You may also enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+      <div class="archive__item-teaser">
+        <img src="/assets/images/Email%20orchestration/teaser-logo.png" alt="">
+      </div>
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/automation/Orchestrating-mailbox-size-reports-using-Azure-automation/" rel="permalink">Orchestration of Exchange online mailbox size reports using Azure automation &amp; Microsoft Graph API
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  7 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Automate M365 reports using Azure runbook &amp; Graph API
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+      <div class="archive__item-teaser">
+        <img src="/assets/images/GPOreporton%20ADOUwithPowerShell.png" alt="">
+      </div>
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/automation/GPO-via-PowerShell/" rel="permalink">GPO report on Active Directory OU with PowerShell
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  6 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Extract GPO report on AD OU’s with PowerShell
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/automation/MonitorAzureBackupswithKQL/" rel="permalink">Monitoring your Azure Backups with KQL
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  3 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">Configure Azure backup status with KQL
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title" itemprop="headline">
+      
+        <a href="/dns%20records/DNS/" rel="permalink">Auditing your DNS Records with PowerShell
+</a>
+      
+    </h2>
+    
+      <p class="page__meta"><i class="far fa-clock" aria-hidden="true"></i> 
+
+
+
+
+  4 minute read
+
+</p>
+    
+    <p class="archive__item-excerpt" itemprop="description">How to extract DNS records &amp; test if they’re valid or not
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+      <li><strong>Follow:</strong></li>
+    
+
+    
+      
+        
+          <li><a href="https://www.linkedin.com/in/chiru-adapa-677734161/" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i> LinkedIn</a></li>
+        
+      
+        
+      
+        
+      
+    
+
+    <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i></a></li>
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2025 Chiru Adapa. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+  <script src="https://kit.fontawesome.com/4eee35f757.js"></script>
+
+
+
+
+
+
+
+
+
+
+  </body>
+</html>
