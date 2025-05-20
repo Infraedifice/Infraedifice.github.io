@@ -17,13 +17,18 @@ jobs:
     permissions:
         id-token: write
         contents: read
-    # Environment variables set here apply to all steps in this job
+    # --- Job-level Environment Variables ---
     env:
-      # Explicitly set the bundle path relative to the workspace
+      # Explicitly set BUNDLE_PATH for Bundler's internal use
       BUNDLE_PATH: ${{ github.workspace }}/vendor/bundle
-      # Explicitly set the Gemfile path
+      # Explicitly set BUNDLE_GEMFILE to the Gemfile location
       BUNDLE_GEMFILE: ${{ github.workspace }}/Gemfile
+      # Explicitly set RubyGems' primary gem installation directory (where gems are)
+      GEM_HOME: ${{ github.workspace }}/vendor/bundle/ruby/2.7.0 # Based on ls -l output
+      # Explicitly set RubyGems' search path for gems (includes GEM_HOME)
+      GEM_PATH: ${{ github.workspace }}/vendor/bundle/ruby/2.7.0 # Based on ls -l output
       JEKYLL_ENV: production # Good practice for production builds
+    # ------------------------------------------
 
     steps:
       - uses: actions/checkout@v3
@@ -31,13 +36,13 @@ jobs:
           submodules: true
           lfs: false
 
-      # 1. Install Ruby (using a different action)
+      # 1. Setup Ruby (using a different action from our previous attempt to ensure freshness)
       - name: Setup Ruby environment
-        uses: ruby/setup-ruby@v1 # Still using this action, but with explicit install commands
+        uses: ruby/setup-ruby@v1
         with:
           ruby-version: '2.7' # Your confirmed local Ruby version
-          # Do NOT use bundler-version here, we'll install it manually
-          # Do NOT use bundler-cache here, as it conflicts with manual setup
+          # Do NOT use bundler-version here; we'll install it manually
+          # Do NOT use bundler-cache here
 
       # 2. Manually install the specific Bundler version
       - name: Install specific Bundler version
@@ -47,16 +52,30 @@ jobs:
       # 3. Install Jekyll and other dependencies
       - name: Install Jekyll and other dependencies
         run: |
-          # Use the explicitly installed Bundler to install gems
-          bundle install --jobs 4 --retry 3 # Installs gems into BUNDLE_PATH
+          # These commands will automatically use BUNDLE_GEMFILE and BUNDLE_PATH
+          # set as job-level environment variables.
+          bundle clean --force           # Clean up any old or unused gems
+          bundle install --jobs 4 --retry 3 # Install gems
 
-      # 4. Build the Jekyll site
-      - name: Build Jekyll site
+      # 4. Debug Environment and Build Jekyll site
+      - name: Debug Environment and Build Jekyll site
         run: |
-          # DEBUGGING: Verify the build.rb file before attempting build
+          echo "--- Environment Variables ---"
+          printenv # Dump all environment variables to the log
+          echo "--- GEM_HOME: $GEM_HOME ---"
+          echo "--- GEM_PATH: $GEM_PATH ---"
+          echo "--- BUNDLE_PATH: $BUNDLE_PATH ---"
+          echo "--- BUNDLE_GEMFILE: $BUNDLE_GEMFILE ---"
+          echo "--- Ruby version check ---"
+          ruby -v # Confirm Ruby version
+          echo "--- Bundler version check ---"
+          bundle -v # Confirm Bundler version
+          echo "--- Bundle check (verify gem integrity) ---"
+          bundle check # This will explicitly check if Bundler thinks the bundle is complete and correct
+          echo "--- Jekyll build.rb file exists check ---"
           ls -l "${{ github.workspace }}/vendor/bundle/ruby/2.7.0/gems/jekyll-4.3.4/lib/jekyll/commands/build.rb"
-          # Run the Jekyll build command
-          bundle exec jekyll build
+          echo "--- Attempting Jekyll build ---"
+          bundle exec jekyll build       # Finally, try to build Jekyll
 
       # 5. Azure Deployment Step (Keep as is)
       - name: Build And Deploy
