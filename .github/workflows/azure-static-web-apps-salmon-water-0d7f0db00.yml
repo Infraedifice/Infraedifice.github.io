@@ -17,36 +17,48 @@ jobs:
     permissions:
         id-token: write
         contents: read
-    # --- Job-level Environment Variables ---
+    # Environment variables set here apply to all steps in this job
     env:
-      BUNDLE_GEMFILE: ${{ github.workspace }}/Gemfile
+      # Explicitly set the bundle path relative to the workspace
       BUNDLE_PATH: ${{ github.workspace }}/vendor/bundle
+      # Explicitly set the Gemfile path
+      BUNDLE_GEMFILE: ${{ github.workspace }}/Gemfile
       JEKYLL_ENV: production # Good practice for production builds
-    # ------------------------------------------
+
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: true
           lfs: false
 
-      - name: Install Ruby and Bundler
-        uses: ruby/setup-ruby@v1
+      # 1. Install Ruby (using a different action)
+      - name: Setup Ruby environment
+        uses: ruby/setup-ruby@v1 # Still using this action, but with explicit install commands
         with:
           ruby-version: '2.7' # Your confirmed local Ruby version
-          bundler-version: '2.3.7' # Your confirmed Bundler version
+          # Do NOT use bundler-version here, we'll install it manually
+          # Do NOT use bundler-cache here, as it conflicts with manual setup
 
-      - name: Install dependencies and build Jekyll site
+      # 2. Manually install the specific Bundler version
+      - name: Install specific Bundler version
         run: |
-          # These commands automatically use BUNDLE_GEMFILE and BUNDLE_PATH
-          # set as job-level environment variables.
-          bundle clean --force           # Clean up any old or unused gems
-          bundle install --jobs 4 --retry 3 # Install gems
-          
-          # DEBUGGING: Check if the Jekyll build.rb file exists AFTER install
-          ls -l ${{ github.workspace }}/vendor/bundle/ruby/2.7.0/gems/jekyll-4.3.4/lib/jekyll/commands/build.rb
-          
-          bundle exec jekyll build       # Build Jekyll
+          gem install bundler -v 2.3.7 --no-document # Installs your Bundler version
 
+      # 3. Install Jekyll and other dependencies
+      - name: Install Jekyll and other dependencies
+        run: |
+          # Use the explicitly installed Bundler to install gems
+          bundle install --jobs 4 --retry 3 # Installs gems into BUNDLE_PATH
+
+      # 4. Build the Jekyll site
+      - name: Build Jekyll site
+        run: |
+          # DEBUGGING: Verify the build.rb file before attempting build
+          ls -l "${{ github.workspace }}/vendor/bundle/ruby/2.7.0/gems/jekyll-4.3.4/lib/jekyll/commands/build.rb"
+          # Run the Jekyll build command
+          bundle exec jekyll build
+
+      # 5. Azure Deployment Step (Keep as is)
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -56,18 +68,14 @@ jobs:
           app_location: "/"
           api_location: ""
           output_location: "_site"
-          # github_id_token is not usually needed here if you have the API token
-          # Remove this line: github_id_token: ${{ steps.idtoken.outputs.result }}
-          # if you removed the Get Id Token step.
-          # We're relying on the azure_static_web_apps_api_token.
 
-close_pull_request_job:
-  if: github.event_name == 'pull_request' && github.event.action == 'closed'
-  runs-on: ubuntu-latest
-  name: Close Pull Request Job
-  steps:
-    - name: Close Pull Request
-      id: closepullrequest
-      uses: Azure/static-web-apps-deploy@v1
-      with:
-        action: "close"
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Job
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          action: "close"
