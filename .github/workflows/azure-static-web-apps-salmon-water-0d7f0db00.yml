@@ -22,23 +22,22 @@ jobs:
         with:
           submodules: true
           lfs: false
-- name: Set up Ruby
+- name: Install Ruby and Bundler
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '2.7' # Changed to 2.7 based on your local setup
-          bundler-cache: true # Re-enabling this with the next steps might work better
-          # This will install bundler into the user's home directory by default
-          # and use it for subsequent bundle commands.
+          ruby-version: '2.7' # Confirmed: Your local Ruby version
+          bundler-version: '2.3.7' # <--- CRITICAL: Now explicitly set to 2.3.7
 
-      - name: Install dependencies and build Jekyll
+      - name: Install Jekyll and other dependencies
+        # Ensure gems are installed into the local vendor/bundle directory
+        # and that Bundler strictly adheres to Gemfile.lock
         run: |
-          # Ensure Bundler is up-to-date and gems are installed based on Gemfile.lock
-          bundle config set deployment 'true'
-          bundle config set path 'vendor/bundle'
-          bundle install --jobs 4 --retry 3 # Install gems into vendor/bundle
+          bundle config set --local path 'vendor/bundle'
+          bundle install --jobs 4 --retry 3 # Explicitly install into vendor/bundle
 
-          # Build the Jekyll site using the installed gems
-          bundle exec jekyll build
+      - name: Build Jekyll site
+        # Use bundle exec to ensure the Jekyll command is run within the context of the installed bundle
+        run: bundle exec jekyll build
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
       - name: Get Id Token
