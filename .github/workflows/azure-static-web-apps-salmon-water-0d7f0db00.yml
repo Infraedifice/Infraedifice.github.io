@@ -25,19 +25,22 @@ jobs:
 - name: Install Ruby and Bundler
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '2.7' # Confirmed: Your local Ruby version
-          bundler-version: '2.3.7' # <--- CRITICAL: Now explicitly set to 2.3.7
+          ruby-version: '2.7' # Your confirmed local Ruby version
+          bundler-version: '2.3.7' # Your confirmed Bundler version
 
       - name: Install Jekyll and other dependencies
-        # Ensure gems are installed into the local vendor/bundle directory
-        # and that Bundler strictly adheres to Gemfile.lock
         run: |
-          bundle config set --local path 'vendor/bundle'
-          bundle install --jobs 4 --retry 3 # Explicitly install into vendor/bundle
+          # Explicitly tell Bundler where to find Gemfile and where to install gems
+          export BUNDLE_GEMFILE=${{ github.workspace }}/Gemfile
+          export BUNDLE_PATH=${{ github.workspace }}/vendor/bundle
+          bundle install --jobs 4 --retry 3
 
       - name: Build Jekyll site
-        # Use bundle exec to ensure the Jekyll command is run within the context of the installed bundle
-        run: bundle exec jekyll build
+        run: |
+          # Ensure environment variables are also set for the build step
+          export BUNDLE_GEMFILE=${{ github.workspace }}/Gemfile
+          export BUNDLE_PATH=${{ github.workspace }}/vendor/bundle
+          bundle exec jekyll build
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
       - name: Get Id Token
