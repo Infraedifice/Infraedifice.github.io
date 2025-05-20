@@ -25,11 +25,14 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.1' # Adjust this to your Ruby version (e.g., '2.7', '3.0', '3.2'). Check your Gemfile.lock or local setup.
-          bundler-cache: true # Caches installed gems for faster builds
+          ruby-version: '3.1' # Ensure this matches your local Gemfile.lock's Ruby version (e.g., '2.7', '3.0', '3.1', '3.2')
 
       - name: Install Jekyll dependencies
-        run: bundle install
+        # No bundler-cache here to ensure a fresh, complete install if issues
+        run: |
+          gem install bundler
+          bundle config set --local path 'vendor/bundle'
+          bundle install --jobs 4 --retry 3
 
       - name: Build Jekyll site
         run: bundle exec jekyll build
