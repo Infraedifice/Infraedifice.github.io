@@ -22,6 +22,17 @@ jobs:
         with:
           submodules: true
           lfs: false
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.1' # Adjust this to your Ruby version (e.g., '2.7', '3.0', '3.2'). Check your Gemfile.lock or local setup.
+          bundler-cache: true # Caches installed gems for faster builds
+
+      - name: Install Jekyll dependencies
+        run: bundle install
+
+      - name: Build Jekyll site
+        run: bundle exec jekyll build
       - name: Install OIDC Client from Core Package
         run: npm install @actions/core@1.6.0 @actions/http-client
       - name: Get Id Token
