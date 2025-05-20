@@ -25,7 +25,7 @@ jobs:
 - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.1' # VERIFY THIS IS YOUR LOCAL RUBY VERSION (e.g., '2.6', '2.7', '3.0', '3.1', '3.2')
+          ruby-version: '2.7' # Changed to 2.7 based on your local setup
           bundler-cache: true # Re-enabling this with the next steps might work better
           # This will install bundler into the user's home directory by default
           # and use it for subsequent bundle commands.
